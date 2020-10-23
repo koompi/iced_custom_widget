@@ -1,70 +1,62 @@
 use iced_native::{
-    layout::{self, flex::Axis, Limits, Node}, Clipboard, Column, column,
-    mouse, Align, Element, Event, Hasher, Layout, Length, Point, Rectangle, Widget, Color, Background, Vector
+    layout::{self, flex::Axis, Limits, Node}, Clipboard,
+    mouse, Align, Element, Event, Hasher, Layout, Length, Point, Rectangle, Widget, Color, Background,
 };
 use iced_graphics::{
-    defaults, Defaults, Primitive, Backend, backend
+    Defaults, Primitive, Backend, backend
 };
 use crate::styles::card::StyleSheet;
 
 pub struct Card<'a, Message, Renderer: self::Renderer>
 {
     state: &'a mut State,
-    header: Element<'a, Message, Renderer>,
-    body: Element<'a, Message, Renderer>,
-    footer: Element<'a, Message, Renderer>,
     width: Length,
     height: Length,
     max_width: u32,
     max_height: u32,
-    min_width: u32,
-    min_height: u32,
     padding: u16,
+    spacing: u16,
     margin: u16,
     on_pressed: Option<Message>,
     style: Renderer::Style,
+    children: Vec<Element<'a, Message, Renderer>>
 }
 
 impl<'a, Message, Renderer> Card<'a, Message, Renderer>
 where
     Message: Clone,
-    Renderer: self::Renderer + column::Renderer,
+    Renderer: self::Renderer,
 {
-    pub fn new<E>(state: &'a mut State, header: E, body: E, footer: E) -> Self
-    where
-        E: Into<Element<'a, Message, Renderer>>,
+    pub fn new(state: &'a mut State) -> Self
     {
         Self {
             state,
-            header: header.into(),
-            body: body.into(),
-            footer: footer.into(),
             width: Length::Shrink,
             height: Length::Shrink,
-            max_width: 0,
-            max_height: 0,
-            min_width: 0,
-            min_height: 0,
+            max_width: u32::MAX,
+            max_height: u32::MAX,
             padding: Renderer::DEFAULT_PADDING,
-            margin: 0,
+            spacing: Renderer::DEFAULT_SPACING,
+            margin: Renderer::DEFAULT_MARGIN,
             on_pressed: None,
             style: Renderer::Style::default(),
+            children: Vec::new()
         }
-    }
-
-    pub fn body<E>(mut self, body: E) -> Self
-    where
-        E: Into<Element<'a, Message, Renderer>>,
-    {
-        self.body = body.into();
-        self
     }
 
     pub fn header<E>(mut self, header: E) -> Self
     where
         E: Into<Element<'a, Message, Renderer>>,
     {
-        self.header = header.into();
+        self.children.insert(0, header.into());
+        self
+    }
+
+    pub fn body<E>(mut self, body: E) -> Self
+    where
+        E: Into<Element<'a, Message, Renderer>>,
+    {
+        self.children.insert(1, body.into());
         self
     }
 
@@ -72,7 +64,7 @@ where
     where
         E: Into<Element<'a, Message, Renderer>>,
     {
-        self.footer = footer.into();
+        self.children.insert(2, footer.into());
         self
     }
 
@@ -96,18 +88,13 @@ where
         self
     }
 
-    pub fn min_width(mut self, min_width: u32) -> Self {
-        self.min_width = min_width;
-        self
-    }
-
-    pub fn min_height(mut self, min_height: u32) -> Self {
-        self.min_height = min_height;
-        self
-    }
-
     pub fn padding(mut self, padding: u16) -> Self {
         self.padding = padding;
+        self
+    }
+
+    pub fn spacing(mut self, spacing: u16) -> Self {
+        self.spacing = spacing;
         self
     }
 
@@ -130,7 +117,7 @@ where
 impl<'a, Message, Renderer> Widget<Message, Renderer> for Card<'a, Message, Renderer>
 where
     Message: Clone,
-    Renderer: self::Renderer + column::Renderer,
+    Renderer: self::Renderer,
 {
     fn width(&self) -> Length {
         self.width
@@ -142,56 +129,42 @@ where
 
     fn layout(&self, renderer: &Renderer, limits: &Limits) -> Node {
         let padding = f32::from(self.padding);
+        let spacing = f32::from(self.spacing);
         let limits = limits
-            .min_width(self.min_width)
-            .min_height(self.min_height)
+            .loose()
             .width(self.width)
             .height(self.height)
             .max_width(self.max_width)
             .max_height(self.max_height)
             .pad(padding);
 
-        // Column::<Message, Renderer>::new()
-        //     .width(self.width)
-        //     .spacing(self.padding)
-        //     .align_items(Align::Center)
-        //     .push(self.header)
-        //     .push(self.body)
-        //     .push(self.footer)
-        //     .layout(renderer, &limits)
-
-        // let mut content = column.layout(renderer, &limits);
-        // content.move_to(Point::new(padding, padding));
-        // let size = limits.resolve(content.size()).pad(padding);
-        // layout::Node::with_children(size, vec![content])
-        let header = self.header.layout(&renderer, &limits);
-        let mut body = self.body.layout(&renderer, &limits);
-        body.move_to(Point::new(padding, padding));
-        let footer = self.footer.layout(&renderer, &limits);
-        let size = limits.resolve(body.size()).pad(self.padding as f32);
-        Node::with_children(size, vec![header, body, footer])
-        // layout::flex::resolve(
-        //     Axis::Vertical,
-        //     renderer,
-        //     &limits,
-        //     padding,
-        //     20.,
-        //     Align::Center,
-        //     &[self.header, self.body, self.footer],
-        // )
+        // let header = self.header.layout(&renderer, &limits);
+        // let mut body = self.body.layout(&renderer, &limits);
+        // body.move_to(Point::new(padding, padding));
+        // let footer = self.footer.layout(&renderer, &limits);
+        // let size = limits.resolve(body.size()).pad(self.padding as f32);
+        // Node::with_children(size, vec![header, body, footer])
+        layout::flex::resolve(
+            Axis::Vertical,
+            renderer,
+            &limits.loose(),
+            padding,
+            spacing,
+            Align::Center,
+            &self.children,
+        )
     }
 
     fn hash_layout(&self, state: &mut Hasher) {
         use std::hash::Hash;
-        self.min_height.hash(state);
-        self.min_width.hash(state);
         self.max_width.hash(state);
         self.max_height.hash(state);
-        self.header.hash_layout(state);
-        self.body.hash_layout(state);
-        self.footer.hash_layout(state);
         self.padding.hash(state);
+        self.spacing.hash(state);
         self.margin.hash(state);
+        self.children.iter().for_each(|e| {
+            e.hash_layout(state);
+        })
     }
 
     fn on_event(
@@ -235,27 +208,7 @@ where
         layout: Layout<'_>,
         cursor_position: Point,
     ) -> Renderer::Output {
-        // let column = column::Renderer::draw(
-        //     renderer,
-        //     defaults,
-        //     &[self.header, self.body, self.footer],
-        //     layout,
-        //     cursor_position
-        // );
-
-        self::Renderer::draw(
-            renderer,
-            defaults,
-            cursor_position,
-            self.on_pressed.is_none(),
-            self.state.is_pressed,
-            layout.bounds(),
-            &self.header,
-            &self.body,
-            &self.footer,
-            layout.children().next().unwrap(),
-            &self.style,
-        )
+        renderer.draw(defaults, layout, cursor_position, self.on_pressed.is_none(), self.state.is_pressed, &self.children, layout.children().next().unwrap(), &self.style)
     }
 }
 
@@ -274,17 +227,17 @@ pub trait Renderer: iced_native::Renderer {
     type Style: std::default::Default;
 
     const DEFAULT_PADDING: u16;
+    const DEFAULT_SPACING: u16;
+    const DEFAULT_MARGIN: u16;
 
     fn draw<Message>(
         &mut self,
         defaults: &Self::Defaults,
+        layout: Layout<'_>,
         cursor_position: Point,
         is_disabled: bool,
         is_pressed: bool,
-        bounds: Rectangle,
-        header: &Element<'_, Message, Self>,
-        body: &Element<'_, Message, Self>,
-        footer: &Element<'_, Message, Self>,
+        children: &[Element<'_, Message, Self>],
         content_layout: Layout<'_>,
         style: &Self::Style,
     ) -> Self::Output;
@@ -297,21 +250,12 @@ where
     type Style = Box<dyn StyleSheet>;
 
     const DEFAULT_PADDING: u16 = 8;
+    const DEFAULT_SPACING: u16 = 8;
+    const DEFAULT_MARGIN: u16 = 2;
 
-    fn draw<Message>(
-        &mut self,
-        defaults: &Self::Defaults,
-        cursor_position: Point,
-        is_disabled: bool,
-        is_pressed: bool,
-        bounds: Rectangle,
-        header: &Element<'_, Message, Self>,
-        body: &Element<'_, Message, Self>,
-        footer: &Element<'_, Message, Self>,
-        content_layout: Layout<'_>,
-        style: &Self::Style,
-    ) -> Self::Output {
-        let is_mouse_over = bounds.contains(cursor_position);
+    fn draw<Message>(&mut self, defaults: &Defaults, layout: Layout<'_>, cursor_position: Point, is_disabled: bool, is_pressed: bool, children: &[Element<'_, Message, Self>], content_layout: Layout<'_>, style: &Self::Style) -> Self::Output {
+        let layout_bound = layout.bounds();
+        let is_mouse_over = layout_bound.contains(cursor_position);
 
         let styling = if is_disabled {
             style.disabled()
@@ -324,41 +268,26 @@ where
         } else {
             style.active()
         };
+        let mut mouse_interaction = mouse::Interaction::default();
 
-        let (header, _) = header.draw(
-            self,
-            &Defaults {
-                text: defaults::Text {
-                    color: styling.text_color,
-                },
-            },
-            content_layout,
-            cursor_position,
-        );
+        let content = Primitive::Group {
+            primitives: children.iter()
+            .zip(layout.children())
+            .map(|(child, layout)| {
+                let (primitive, new_mouse_interaction) =
+                    child.draw(self, defaults, layout, cursor_position);
 
-        let (body, _) = body.draw(
-            self,
-            &Defaults {
-                text: defaults::Text {
-                    color: styling.text_color,
-                },
-            },
-            content_layout,
-            cursor_position,
-        );
+                if new_mouse_interaction > mouse_interaction {
+                    mouse_interaction = new_mouse_interaction;
+                }
 
-        let (footer, _) = footer.draw(
-            self,
-            &Defaults {
-                text: defaults::Text {
-                    color: styling.text_color,
-                },
-            },
-            content_layout,
-            cursor_position,
-        );
+                primitive
+            })
+            .collect(),
+        };
+
         let background = Primitive::Quad {
-            bounds,
+            bounds: layout_bound,
             background: styling
                 .background
                 .unwrap_or(Background::Color(Color::TRANSPARENT)),
@@ -369,12 +298,13 @@ where
 
         let shadow = Primitive::Quad {
             bounds: Rectangle {
-                x: bounds.x + styling.shadow_offset.x,
-                y: bounds.y + styling.shadow_offset.y,
-                ..bounds
+                x: layout_bound.x - styling.shadow_offset.x * 2.,
+                y: layout_bound.y - styling.shadow_offset.y,
+                width: layout_bound.width + styling.shadow_offset.x * 4.,
+                height: layout_bound.height + styling.shadow_offset.y * 2.
             },
             background: Background::Color(
-                [0.0, 0.0, 0.0, 0.5].into(),
+                [0.0, 0.0, 0.0, 0.2].into(),
             ),
             border_radius: styling.border_radius,
             border_width: 0,
@@ -382,7 +312,7 @@ where
         };
         (
             Primitive::Group {
-                primitives: vec![shadow, background, footer, body, header],
+                primitives: vec![shadow, background, content],
             },
             if is_mouse_over && !is_disabled {
                 mouse::Interaction::Pointer
@@ -395,7 +325,7 @@ where
 
 impl<'a, Message, Renderer> From<Card<'a, Message, Renderer>> for Element<'a, Message, Renderer>
 where
-    Renderer: 'a + self::Renderer + column::Renderer,
+    Renderer: 'a + self::Renderer,
     Message: Clone + 'static,
 {
     fn from(card: Card<'a, Message, Renderer>) -> Element<'a, Message, Renderer> {

@@ -31,18 +31,21 @@ impl Sandbox for CardTest {
 
    fn update(&mut self, message: Self::Message) {
       match message {
-         Self::Message::OnCardPressed => ()
+         Self::Message::OnCardPressed => {
+            println!("Card Pressed");
+         }
       }
    }
 
    fn view(&mut self) -> Element<Self::Message> {
-      let header = Text::new("Header");
-      let body = Text::new("Body");
-      let footer = Text::new("Footer");
+      let header = Text::new("Header ggdfgdfg");
+      let body = Text::new("Body fdgdfgdf fgdfsgsdgfdf");
+      let footer = Text::new("Footer sdfdfgfdgdfgfd");
       
-      let card = Card::new(&mut self.card_state, header, body, footer)
-         .min_width(127)
-         .min_height(127);
+      let card = Card::new(&mut self.card_state).header(header).body(body).footer(footer)
+         .spacing(20)
+         .padding(10)
+         .on_pressed(Self::Message::OnCardPressed);
 
       Container::new(card)
          .width(Length::Fill)

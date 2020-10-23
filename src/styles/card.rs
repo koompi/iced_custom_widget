@@ -13,14 +13,14 @@ pub struct Style {
 
 impl std::default::Default for Style {
    fn default() -> Self {
-       Self {
-           shadow_offset: Vector::default(),
-           background: None,
-           border_radius: 0,
-           border_width: 0,
-           border_color: Color::TRANSPARENT,
-           text_color: Color::BLACK,
-       }
+      Self {
+         shadow_offset: Vector::default(),
+         background: None,
+         border_radius: 0,
+         border_width: 0,
+         border_color: Color::TRANSPARENT,
+         text_color: Color::BLACK,
+      }
    }
 }
 
@@ -29,12 +29,7 @@ pub trait StyleSheet {
    fn active(&self) -> Style;
 
    fn hovered(&self) -> Style {
-       let active = self.active();
-
-       Style {
-           shadow_offset: active.shadow_offset + Vector::new(0.0, 1.0),
-           ..active
-       }
+      self.active()
    }
 
    fn pressed(&self) -> Style {
@@ -45,22 +40,22 @@ pub trait StyleSheet {
    }
 
    fn disabled(&self) -> Style {
-       let active = self.active();
+      let active = self.active();
 
-       Style {
-           shadow_offset: Vector::default(),
-           background: active.background.map(|background| match background {
-               Background::Color(color) => Background::Color(Color {
-                   a: color.a * 0.5,
-                   ..color
-               }),
-           }),
-           text_color: Color {
-               a: active.text_color.a * 0.5,
-               ..active.text_color
-           },
-           ..active
-       }
+      Style {
+         shadow_offset: Vector::default(),
+         background: active.background.map(|background| match background {
+            Background::Color(color) => Background::Color(Color {
+                  a: color.a * 0.5,
+                  ..color
+            }),
+         }),
+         text_color: Color {
+            a: active.text_color.a * 0.5,
+            ..active.text_color
+         },
+         ..active
+      }
    }
 }
 
@@ -68,14 +63,14 @@ struct Default;
 
 impl StyleSheet for Default {
    fn active(&self) -> Style {
-       Style {
-           shadow_offset: Vector::new(0.0, 0.0),
-           background: Some(Background::Color([0.87, 0.87, 0.87].into())),
-           border_radius: 2,
-           border_width: 1,
-           border_color: [0.7, 0.7, 0.7].into(),
-           text_color: Color::BLACK,
-       }
+      Style {
+         shadow_offset: Vector::new(1.0, 2.0),
+         background: Some(Background::Color(Color::WHITE)),
+         border_radius: 10,
+         border_width: 0,
+         border_color: [0.7, 0.7, 0.7].into(),
+         text_color: Color::BLACK,
+      }
    }
 }
 
