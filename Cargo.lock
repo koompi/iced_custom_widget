@@ -516,16 +516,6 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-channel"
-version = "0.4.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b153fe7cbef478c567df0f972e02e6d736db11affe43dfc9c56a9374d1adfb87"
-dependencies = [
- "crossbeam-utils 0.7.2",
- "maybe-uninit",
-]
-
-[[package]]
-name = "crossbeam-channel"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dca26ee1f8d361640700bde38b2c37d8c22b3ce2d360e1fc1c74ea4b0aa7d775"
@@ -536,39 +526,13 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-deque"
-version = "0.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f02af974daeee82218205558e51ec8768b48cf524bd01d550abe5573a608285"
-dependencies = [
- "crossbeam-epoch 0.8.2",
- "crossbeam-utils 0.7.2",
- "maybe-uninit",
-]
-
-[[package]]
-name = "crossbeam-deque"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94af6efb46fef72616855b036a624cf27ba656ffc9be1b9a3c931cfc7749a9a9"
 dependencies = [
  "cfg-if 1.0.0",
- "crossbeam-epoch 0.9.0",
+ "crossbeam-epoch",
  "crossbeam-utils 0.8.0",
-]
-
-[[package]]
-name = "crossbeam-epoch"
-version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "058ed274caafc1f60c4997b5fc07bf7dc7cca454af7c6e81edffe5f33f70dace"
-dependencies = [
- "autocfg",
- "cfg-if 0.1.10",
- "crossbeam-utils 0.7.2",
- "lazy_static",
- "maybe-uninit",
- "memoffset",
- "scopeguard",
 ]
 
 [[package]]
@@ -914,9 +878,9 @@ checksum = "5fc94b64bb39543b4e432f1790b6bf18e3ee3b74653c5449f63310e9a74b123c"
 
 [[package]]
 name = "futures-lite"
-version = "1.11.1"
+version = "1.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "381a7ad57b1bad34693f63f6f377e1abded7a9c85c9d3eb6771e11c60aaadab9"
+checksum = "5e6c079abfac3ab269e2927ec048dabc89d009ebfdda6b8ee86624f30c689658"
 dependencies = [
  "fastrand",
  "futures-core",
@@ -1007,10 +971,11 @@ dependencies = [
 
 [[package]]
 name = "gfx-backend-dx11"
-version = "0.6.5"
+version = "0.6.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fad85fb4be3051ef7ba763b722c079b3bc3acb5067f44b7ed6a0ed4c0e2e1755"
+checksum = "9216b7f9221930c55523bdde49f9679570e0fda1d726aa1ac4476c0e1efde5c7"
 dependencies = [
+ "arrayvec",
  "bitflags",
  "gfx-auxil",
  "gfx-hal",
@@ -1178,8 +1143,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8cef969a091be5565c2c10b31fd2f115cbeed9f783a27c96ae240ff8ceee067c"
 dependencies = [
  "ab_glyph",
- "crossbeam-channel 0.5.0",
- "crossbeam-deque 0.8.0",
+ "crossbeam-channel",
+ "crossbeam-deque",
  "linked-hash-map",
  "rayon",
  "rustc-hash",
@@ -1213,10 +1178,11 @@ dependencies = [
  "async-std",
  "chrono",
  "iced",
- "iced_futures 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "iced_futures",
  "iced_graphics",
  "iced_native",
  "iced_wgpu",
+ "iced_winit",
  "rand",
 ]
 
@@ -1235,7 +1201,7 @@ version = "0.1.1"
 source = "git+https://github.com/hecrj/iced.git#23647d2f50f0e177b93cf09c72886a90702df982"
 dependencies = [
  "iced_core",
- "iced_futures 0.1.2 (git+https://github.com/hecrj/iced.git)",
+ "iced_futures",
  "iced_web",
  "iced_wgpu",
  "iced_winit",
@@ -1246,17 +1212,6 @@ dependencies = [
 name = "iced_core"
 version = "0.2.1"
 source = "git+https://github.com/hecrj/iced.git#23647d2f50f0e177b93cf09c72886a90702df982"
-
-[[package]]
-name = "iced_futures"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd2d8494c0b2a1e1977421b4c094fdcd32d79c27fb9b3bbf1021c62de9eb6986"
-dependencies = [
- "futures",
- "log",
- "wasm-bindgen-futures",
-]
 
 [[package]]
 name = "iced_futures"
@@ -1288,7 +1243,7 @@ version = "0.2.2"
 source = "git+https://github.com/hecrj/iced.git#23647d2f50f0e177b93cf09c72886a90702df982"
 dependencies = [
  "iced_core",
- "iced_futures 0.1.2 (git+https://github.com/hecrj/iced.git)",
+ "iced_futures",
  "num-traits 0.2.12",
  "twox-hash",
  "unicode-segmentation",
@@ -1309,7 +1264,7 @@ source = "git+https://github.com/hecrj/iced.git#23647d2f50f0e177b93cf09c72886a90
 dependencies = [
  "dodrio",
  "iced_core",
- "iced_futures 0.1.2 (git+https://github.com/hecrj/iced.git)",
+ "iced_futures",
  "iced_style",
  "num-traits 0.2.12",
  "url",
@@ -1341,7 +1296,7 @@ name = "iced_winit"
 version = "0.1.1"
 source = "git+https://github.com/hecrj/iced.git#23647d2f50f0e177b93cf09c72886a90702df982"
 dependencies = [
- "iced_futures 0.1.2 (git+https://github.com/hecrj/iced.git)",
+ "iced_futures",
  "iced_graphics",
  "iced_native",
  "log",
@@ -1931,9 +1886,9 @@ dependencies = [
 
 [[package]]
 name = "pin-project-lite"
-version = "0.1.10"
+version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e555d9e657502182ac97b539fb3dae8b79cda19e3e4f8ffb5e8de4f18df93c95"
+checksum = "c917123afa01924fc84bb20c4c03f004d9c38e5127e3c039bbf7f4b9c76a2f6b"
 
 [[package]]
 name = "pin-utils"
@@ -2063,25 +2018,25 @@ dependencies = [
 
 [[package]]
 name = "rayon"
-version = "1.4.1"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcf6960dc9a5b4ee8d3e4c5787b4a112a8818e0290a42ff664ad60692fdf2032"
+checksum = "8b0d8e0819fadc20c74ea8373106ead0600e3a67ef1fe8da56e39b9ae7275674"
 dependencies = [
  "autocfg",
- "crossbeam-deque 0.7.3",
+ "crossbeam-deque",
  "either",
  "rayon-core",
 ]
 
 [[package]]
 name = "rayon-core"
-version = "1.8.1"
+version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8c4fec834fb6e6d2dd5eece3c7b432a52f0ba887cf40e595190c4107edc08bf"
+checksum = "9ab346ac5921dc62ffa9f89b7a773907511cdfa5490c572ae9be1be33e8afa4a"
 dependencies = [
- "crossbeam-channel 0.4.4",
- "crossbeam-deque 0.7.3",
- "crossbeam-utils 0.7.2",
+ "crossbeam-channel",
+ "crossbeam-deque",
+ "crossbeam-utils 0.8.0",
  "lazy_static",
  "num_cpus",
 ]
@@ -2329,9 +2284,9 @@ checksum = "8fb1df15f412ee2e9dfc1c504260fa695c1c3f10fe9f4a6ee2d2184d7d6450e2"
 
 [[package]]
 name = "syn"
-version = "1.0.45"
+version = "1.0.46"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea9c5432ff16d6152371f808fb5a871cd67368171b09bb21b43df8e4a47a3556"
+checksum = "5ad5de3220ea04da322618ded2c42233d02baca219d6f160a3e9c87cda16c942"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2757,9 +2712,9 @@ dependencies = [
 
 [[package]]
 name = "wepoll-sys"
-version = "3.0.0"
+version = "3.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "142bc2cba3fe88be1a8fcb55c727fa4cd5b0cf2d7438722792e22f26f04bc1e0"
+checksum = "0fcb14dea929042224824779fbc82d9fab8d2e6d3cbc0ac404de8edf489e77ff"
 dependencies = [
  "cc",
 ]

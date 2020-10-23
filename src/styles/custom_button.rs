@@ -1,21 +1,17 @@
-use iced::{
-    button, Background, Color
-};
+use iced::{button, Background, Color};
 
 pub enum CustomButton {
-    Default
+    Default,
 }
 
 impl button::StyleSheet for CustomButton {
     fn active(&self) -> button::Style {
         match self {
-            CustomButton::Default => {
-                button::Style {
-                    background: Some(Background::Color(Color::TRANSPARENT)),
-                    border_radius: 10,
-                    ..button::Style::default()
-                }
-            }
+            CustomButton::Default => button::Style {
+                background: Some(Background::Color(Color::TRANSPARENT)),
+                border_radius: 10,
+                ..button::Style::default()
+            },
         }
     }
 
