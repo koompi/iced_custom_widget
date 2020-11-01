@@ -1,10 +1,8 @@
+use iced_graphics::{backend, Backend, Primitive};
 use iced_native::{
     layout::{Limits, Node},
     mouse, Color, Element, Font, Hasher, HorizontalAlignment, Layout, Length, Point, Rectangle,
     Size, VerticalAlignment, Widget,
-};
-use iced_graphics::{
-    Primitive, Backend, backend,
 };
 
 pub struct Icon {
@@ -32,8 +30,8 @@ impl Icon {
             },
             size: None,
             label: String::new(),
-            horizontal_alignment: HorizontalAlignment::Left,
-            vertical_alignment: VerticalAlignment::Top,
+            horizontal_alignment: HorizontalAlignment::Center,
+            vertical_alignment: VerticalAlignment::Center,
         }
     }
 
@@ -57,10 +55,7 @@ impl Icon {
         self
     }
 
-    pub fn horizontal_alignment(
-        mut self,
-        alignment: HorizontalAlignment,
-    ) -> Self {
+    pub fn horizontal_alignment(mut self, alignment: HorizontalAlignment) -> Self {
         self.horizontal_alignment = alignment;
         self
     }
@@ -98,17 +93,19 @@ where
         defaults: &Renderer::Defaults,
         layout: Layout<'_>,
         _cursor_position: Point,
+        viewport: &Rectangle,
     ) -> Renderer::Output {
         renderer.draw(
             defaults,
             layout.bounds(),
+            viewport,
             &self.icon,
             self.size.unwrap_or(renderer.default_size()),
             self.font,
             self.color,
             &self.label,
             self.horizontal_alignment,
-            self.vertical_alignment
+            self.vertical_alignment,
         )
     }
 
@@ -142,6 +139,7 @@ pub trait Renderer: iced_native::Renderer {
         &mut self,
         defaults: &Self::Defaults,
         bounds: Rectangle,
+        viewport: &Rectangle,
         icon: &char,
         size: u16,
         font: Font,
@@ -153,20 +151,24 @@ pub trait Renderer: iced_native::Renderer {
 }
 
 impl<B> Renderer for iced_graphics::Renderer<B>
-where B: Backend + backend::Text {
+where
+    B: Backend + backend::Text,
+{
     type Font = Font;
     fn default_size(&self) -> u16 {
         self.backend().default_size()
     }
 
     fn measure(&self, content: &char, size: u16, font: Font, bounds: Size) -> (f32, f32) {
-        self.backend().measure(&content.to_string(), f32::from(size), font, bounds)
+        self.backend()
+            .measure(&content.to_string(), f32::from(size), font, bounds)
     }
 
     fn draw(
         &mut self,
         defaults: &Self::Defaults,
         bounds: Rectangle,
+        _viewport: &Rectangle,
         content: &char,
         size: u16,
         font: Font,

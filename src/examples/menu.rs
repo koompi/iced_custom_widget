@@ -3,7 +3,7 @@ use crate::components::grid::Grid;
 use crate::styles::custom_text_input::CustomTextInput;
 use iced::{
     button, executor, scrollable, text_input, Align, Application, Column, Command, Container,
-    Element, Length, Scrollable, Settings, TextInput,
+    Element, Length, Scrollable, Settings, TextInput
 };
 
 pub struct Menu {
@@ -199,11 +199,16 @@ impl Application for Menu {
             .center_y()
             .align_x(Align::Center);
 
+        // let search_section = Row::new()
+        //     .push(Space::with_width(Length::FillPortion(2)))
+        //     .push(Container::new(search).width(Length::FillPortion(3)))
+        //     .push(Space::with_width(Length::FillPortion(2)));
+
         let menu: Element<_> = self
             .filtered_application
             .iter_mut()
             .enumerate()
-            .fold(Column::new(), |grid, (i, app)| {
+            .fold(Grid::new().column_width(175), |grid, (i, app)| {
                 grid.push(
                     app.view()
                         .map(move |message| MenuMessage::AppMessage(i, message)),
@@ -211,9 +216,11 @@ impl Application for Menu {
             })
             .into();
 
-        // let card: Element<_> = Card::new(Text::new("header"), Text::new("body"), Text::new("footer")).into();
-
-        let content = Column::new().spacing(20).push(search_section).push(menu);
+        let content = Column::new()
+            .spacing(20)
+            .align_items(Align::Center)
+            .push(search_section)
+            .push(menu);
 
         Scrollable::new(&mut self.scroll)
             .padding(30)

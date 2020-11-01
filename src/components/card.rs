@@ -1,14 +1,15 @@
-use iced_native::{
-    layout::{self, flex::Axis, Limits, Node}, Clipboard,
-    mouse, Align, Element, Event, Hasher, Layout, Length, Point, Rectangle, Widget, Color, Background,
-};
-use iced_graphics::{
-    Defaults, Primitive, Backend, backend
-};
 use crate::styles::card::StyleSheet;
+use iced_graphics::{backend, Backend, Defaults, Primitive};
+use iced_native::{
+    layout::{
+        flex::{self, Axis},
+        Limits, Node,
+    },
+    mouse, Align, Background, Clipboard, Color, Element, Event, Hasher, Layout, Length, Point,
+    Rectangle, Widget,
+};
 
-pub struct Card<'a, Message, Renderer: self::Renderer>
-{
+pub struct Card<'a, Message, Renderer: self::Renderer> {
     state: &'a mut State,
     width: Length,
     height: Length,
@@ -16,10 +17,9 @@ pub struct Card<'a, Message, Renderer: self::Renderer>
     max_height: u32,
     padding: u16,
     spacing: u16,
-    margin: u16,
     on_pressed: Option<Message>,
     style: Renderer::Style,
-    children: Vec<Element<'a, Message, Renderer>>
+    children: Vec<Element<'a, Message, Renderer>>,
 }
 
 impl<'a, Message, Renderer> Card<'a, Message, Renderer>
@@ -27,8 +27,7 @@ where
     Message: Clone,
     Renderer: self::Renderer,
 {
-    pub fn new(state: &'a mut State) -> Self
-    {
+    pub fn new(state: &'a mut State) -> Self {
         Self {
             state,
             width: Length::Shrink,
@@ -37,10 +36,9 @@ where
             max_height: u32::MAX,
             padding: Renderer::DEFAULT_PADDING,
             spacing: Renderer::DEFAULT_SPACING,
-            margin: Renderer::DEFAULT_MARGIN,
             on_pressed: None,
             style: Renderer::Style::default(),
-            children: Vec::new()
+            children: Vec::new(),
         }
     }
 
@@ -98,11 +96,6 @@ where
         self
     }
 
-    pub fn margin(mut self, margin: u16) -> Self {
-        self.margin = margin;
-        self
-    }
-
     pub fn on_pressed(mut self, msg: Message) -> Self {
         self.on_pressed = Some(msg);
         self
@@ -144,7 +137,7 @@ where
         // let footer = self.footer.layout(&renderer, &limits);
         // let size = limits.resolve(body.size()).pad(self.padding as f32);
         // Node::with_children(size, vec![header, body, footer])
-        layout::flex::resolve(
+        flex::resolve(
             Axis::Vertical,
             renderer,
             &limits.loose(),
@@ -161,7 +154,6 @@ where
         self.max_height.hash(state);
         self.padding.hash(state);
         self.spacing.hash(state);
-        self.margin.hash(state);
         self.children.iter().for_each(|e| {
             e.hash_layout(state);
         })
@@ -207,8 +199,18 @@ where
         defaults: &Renderer::Defaults,
         layout: Layout<'_>,
         cursor_position: Point,
+        viewport: &Rectangle,
     ) -> Renderer::Output {
-        renderer.draw(defaults, layout, cursor_position, self.on_pressed.is_none(), self.state.is_pressed, &self.children, layout.children().next().unwrap(), &self.style)
+        renderer.draw(
+            defaults,
+            layout,
+            cursor_position,
+            viewport,
+            self.on_pressed.is_none(),
+            self.state.is_pressed,
+            &self.children,
+            &self.style,
+        )
     }
 }
 
@@ -228,17 +230,16 @@ pub trait Renderer: iced_native::Renderer {
 
     const DEFAULT_PADDING: u16;
     const DEFAULT_SPACING: u16;
-    const DEFAULT_MARGIN: u16;
 
     fn draw<Message>(
         &mut self,
         defaults: &Self::Defaults,
         layout: Layout<'_>,
         cursor_position: Point,
+        viewport: &Rectangle,
         is_disabled: bool,
         is_pressed: bool,
         children: &[Element<'_, Message, Self>],
-        content_layout: Layout<'_>,
         style: &Self::Style,
     ) -> Self::Output;
 }
@@ -251,9 +252,18 @@ where
 
     const DEFAULT_PADDING: u16 = 8;
     const DEFAULT_SPACING: u16 = 8;
-    const DEFAULT_MARGIN: u16 = 2;
 
-    fn draw<Message>(&mut self, defaults: &Defaults, layout: Layout<'_>, cursor_position: Point, is_disabled: bool, is_pressed: bool, children: &[Element<'_, Message, Self>], content_layout: Layout<'_>, style: &Self::Style) -> Self::Output {
+    fn draw<Message>(
+        &mut self,
+        defaults: &Defaults,
+        layout: Layout<'_>,
+        cursor_position: Point,
+        viewport: &Rectangle,
+        is_disabled: bool,
+        is_pressed: bool,
+        children: &[Element<'_, Message, Self>],
+        style: &Self::Style,
+    ) -> Self::Output {
         let layout_bound = layout.bounds();
         let is_mouse_over = layout_bound.contains(cursor_position);
 
@@ -271,19 +281,20 @@ where
         let mut mouse_interaction = mouse::Interaction::default();
 
         let content = Primitive::Group {
-            primitives: children.iter()
-            .zip(layout.children())
-            .map(|(child, layout)| {
-                let (primitive, new_mouse_interaction) =
-                    child.draw(self, defaults, layout, cursor_position);
+            primitives: children
+                .iter()
+                .zip(layout.children())
+                .map(|(child, layout)| {
+                    let (primitive, new_mouse_interaction) =
+                        child.draw(self, defaults, layout, cursor_position, viewport);
 
-                if new_mouse_interaction > mouse_interaction {
-                    mouse_interaction = new_mouse_interaction;
-                }
+                    if new_mouse_interaction > mouse_interaction {
+                        mouse_interaction = new_mouse_interaction;
+                    }
 
-                primitive
-            })
-            .collect(),
+                    primitive
+                })
+                .collect(),
         };
 
         let background = Primitive::Quad {
@@ -301,11 +312,9 @@ where
                 x: layout_bound.x - styling.shadow_offset.x * 2.,
                 y: layout_bound.y - styling.shadow_offset.y,
                 width: layout_bound.width + styling.shadow_offset.x * 4.,
-                height: layout_bound.height + styling.shadow_offset.y * 2.
+                height: layout_bound.height + styling.shadow_offset.y * 2.,
             },
-            background: Background::Color(
-                [0.0, 0.0, 0.0, 0.2].into(),
-            ),
+            background: Background::Color([0.0, 0.0, 0.0, 0.2].into()),
             border_radius: styling.border_radius,
             border_width: 0,
             border_color: Color::TRANSPARENT,

@@ -1,31 +1,40 @@
+use iced_graphics::{Backend, Defaults, Primitive};
 use iced_native::{
     layout::{
         flex::{self, Axis},
-        Limits, Node,
-    },
-    mouse, Align, Element, Hasher, Layout, Length, Point, Size, Widget,
+        Limits, Node, 
+    }, 
+    mouse, Align, Element, Hasher, Layout, Length, Point, Rectangle, Size, Widget, Event, Clipboard, overlay
 };
-// use iced_wgpu::{Primitive, Defaults, Renderer};
 use std::{any::TypeId, hash::Hash, iter};
 
-#[allow(missing_debug_implementations)]
 pub struct Grid<'a, Message, Renderer> {
+    padding: u16,
     columns: Option<usize>,
     column_width: Option<u16>,
-    elements: Vec<Element<'a, Message, Renderer>>,
+    children: Vec<Element<'a, Message, Renderer>>,
 }
 
-impl<'a, Message, Renderer> Grid<'a, Message, Renderer> {
+impl<'a, Message, Renderer> Grid<'a, Message, Renderer>
+where
+    Renderer: self::Renderer,
+{
     pub fn new() -> Self {
         Self::with_children(Vec::new())
     }
 
-    pub fn with_children(elements: Vec<Element<'a, Message, Renderer>>) -> Self {
+    pub fn with_children(children: Vec<Element<'a, Message, Renderer>>) -> Self {
         Self {
+            padding: Renderer::DEFAULT_PADDING,
             columns: None,
             column_width: None,
-            elements,
+            children,
         }
+    }
+
+    pub fn padding(mut self, units: u16) -> Self {
+        self.padding = units;
+        self
     }
 
     pub fn columns(mut self, columns: usize) -> Self {
@@ -43,11 +52,11 @@ impl<'a, Message, Renderer> Grid<'a, Message, Renderer> {
         self
     }
 
-    pub fn push<E>(mut self, element: E) -> Self
+    pub fn push<E>(mut self, children: E) -> Self
     where
         E: Into<Element<'a, Message, Renderer>>,
     {
-        self.elements.push(element.into());
+        self.children.push(children.into());
         self
     }
 }
@@ -69,24 +78,24 @@ where
     }
 
     fn layout(&self, renderer: &Renderer, limits: &Limits) -> Node {
-        if self.elements.is_empty() {
+        if self.children.is_empty() {
             Node::new(Size::ZERO)
         } else {
+            let padding = f32::from(self.padding);
             let column_limits = if let Some(column_width) = self.column_width {
                 limits.width(Length::Units(column_width))
             } else {
                 *limits
             };
-
             // if we have a given number of columns, we can find out how
             // wide a column is by finding the widest cell in it
             if let Some(columns) = self.columns {
                 // store calculated layout sizes
-                let mut layouts = Vec::with_capacity(self.elements.len());
+                let mut layouts = Vec::with_capacity(self.children.len());
                 // store width of each column
                 let mut column_widths = Vec::<f32>::with_capacity(columns);
 
-                for (column, element) in (0..columns).cycle().zip(&self.elements) {
+                for (column, element) in (0..columns).cycle().zip(&self.children) {
                     let layout = element.layout(renderer, &column_limits).size();
                     layouts.push(layout);
 
@@ -105,7 +114,7 @@ where
                         Some(*state)
                     });
 
-                let mut nodes = Vec::with_capacity(self.elements.len());
+                let mut nodes = Vec::with_capacity(self.children.len());
                 let mut grid_height = 0.;
                 let mut row_height = 0.;
 
@@ -129,14 +138,14 @@ where
             // if we have `column_width` but no `columns`, calculate number of
             // columns by checking how many can fit
             } else if let Some(column_width) = self.column_width {
-                let column_width: f32 = column_width.into();
+                let column_width = f32::from(column_width);
                 let max_width = limits.max().width;
-                let columns = (max_width / column_width).floor() as usize;
-                let mut nodes = Vec::with_capacity(self.elements.len());
+                let columns = (max_width / column_width).floor() as u16;
+                let mut nodes = Vec::with_capacity(self.children.len());
                 let mut grid_height = 0.;
                 let mut row_height = 0.;
 
-                for (column, element) in (0..columns).cycle().zip(&self.elements) {
+                for (column, element) in (0..columns).cycle().zip(&self.children) {
                     if column == 0 {
                         grid_height += row_height;
                         row_height = 0.;
@@ -144,7 +153,7 @@ where
 
                     let size = element.layout(renderer, &column_limits).size();
                     let mut node = Node::new(size);
-                    node.move_to(Point::new(column as f32 * column_width, grid_height));
+                    node.move_to(Point::new((column as f32) * column_width, grid_height));
                     nodes.push(node);
                     row_height = row_height.max(size.height);
                 }
@@ -160,10 +169,10 @@ where
                     Axis::Horizontal,
                     renderer,
                     &limits,
-                    0.,
-                    0.,
+                    padding,
+                    8.,
                     Align::Start,
-                    &self.elements,
+                    &self.children,
                 )
             }
         }
@@ -175,47 +184,92 @@ where
         defaults: &Renderer::Defaults,
         layout: Layout<'_>,
         cursor_position: Point,
+        viewport: &Rectangle,
     ) -> Renderer::Output {
-        renderer.draw(defaults, layout, cursor_position, &self.elements)
+        renderer.draw(defaults, layout, cursor_position, viewport, &self.children)
     }
 
     fn hash_layout(&self, state: &mut Hasher) {
         TypeId::of::<Grid<'_, (), ()>>().hash(state);
 
-        for element in &self.elements {
-            element.hash_layout(state);
+        self.padding.hash(state);
+        for e in &self.children {
+            e.hash_layout(state);
         }
     }
+
+    // fn on_event(
+    //     &mut self,
+    //     event: Event,
+    //     layout: Layout<'_>,
+    //     cursor_position: Point,
+    //     messages: &mut Vec<Message>,
+    //     renderer: &Renderer,
+    //     clipboard: Option<&dyn Clipboard>,
+    // ) {
+    //     self.children.iter_mut().zip(layout.children()).for_each(
+    //         |(child, layout)| {
+    //             child.widget.on_event(
+    //                 event.clone(),
+    //                 layout,
+    //                 cursor_position,
+    //                 messages,
+    //                 renderer,
+    //                 clipboard,
+    //             )
+    //         },
+    //     );
+    // }
+
+    // fn overlay(
+    //     &mut self,
+    //     layout: Layout<'_>,
+    // ) -> Option<overlay::Element<'_, Message, Renderer>> {
+    //     self.children
+    //         .iter_mut()
+    //         .zip(layout.children())
+    //         .filter_map(|(child, layout)| child.widget.overlay(layout))
+    //         .next()
+    // }
 }
 
-pub trait Renderer: iced_native::Renderer + Sized {
+pub trait Renderer: iced_native::Renderer + Sized{
+    const DEFAULT_PADDING: u16;
+
     fn draw<Message>(
         &mut self,
         defaults: &Self::Defaults,
         layout: Layout<'_>,
         cursor_position: Point,
-        elements: &[Element<'_, Message, Self>],
+        viewport: &Rectangle,
+        children: &[Element<'_, Message, Self>],
     ) -> Self::Output;
 }
 
-impl Renderer for iced_wgpu::Renderer {
+impl<B> Renderer for iced_graphics::Renderer<B>
+where
+    B: Backend,
+{
+    const DEFAULT_PADDING: u16 = 8;
+
     fn draw<Message>(
         &mut self,
-        defaults: &Self::Defaults,
+        defaults: &Defaults,
         layout: Layout<'_>,
         cursor_position: Point,
-        content: &[Element<'_, Message, Self>],
+        viewport: &Rectangle,
+        children: &[Element<'_, Message, Self>],
     ) -> Self::Output {
         let mut mouse_interaction = mouse::Interaction::default();
 
         (
-            iced_wgpu::Primitive::Group {
-                primitives: content
+            Primitive::Group {
+                primitives: children
                     .iter()
                     .zip(layout.children())
                     .map(|(child, layout)| {
                         let (primitive, new_mouse_interaction) =
-                            child.draw(self, defaults, layout, cursor_position);
+                            child.draw(self, defaults, layout, cursor_position, viewport);
 
                         if new_mouse_interaction > mouse_interaction {
                             mouse_interaction = new_mouse_interaction;

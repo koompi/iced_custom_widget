@@ -1,8 +1,6 @@
 use crate::components::icon::Icon;
 use crate::styles::custom_button::CustomButton;
-use iced::{
-    button, Align, Button, Column, Container, Element, Length, Text,
-};
+use iced::{button, Align, Button, Column, Container, Element, Length, Text};
 
 #[derive(Debug, Clone)]
 pub struct App {
@@ -35,23 +33,21 @@ impl App {
 
     pub fn view(&mut self) -> Element<AppMessage> {
         let icon = Icon::new(self.icon).size(127);
-        let name = Text::new(&self.name).size(15);
-        let app = Column::new()
-            .push(icon)
-            .push(name)
-            .align_items(Align::Center);
-        let app_btn = Button::new(&mut self.clickable, app)
-            .padding(10)
-            .min_height(75)
-            .min_width(75)
-            .style(CustomButton::Default)
-            .on_press(AppMessage::AppClicked);
-
-        Container::new(app_btn)
-            .center_x()
-            .center_y()
-            .width(Length::Shrink)
-            .height(Length::Shrink)
-            .into()
+        icon.into()
+        // let name = Text::new(&self.name).size(15);
+        // let app = Column::new()
+        //     .align_items(Align::Center)
+        //     .push(icon)
+        //     .push(name);
+        // let app_btn = Button::new(&mut self.clickable, app)
+        //     .padding(10)
+        //     .style(CustomButton::Default)
+        //     .on_press(AppMessage::AppClicked);
+        // Container::new(app_btn)
+        //     .center_x()
+        //     .center_y()
+        //     .width(Length::Shrink)
+        //     .height(Length::Shrink)
+        //     .into()
     }
 }

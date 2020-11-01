@@ -20,7 +20,7 @@ impl text_input::StyleSheet for CustomTextInput {
                 CustomTextInput::Warning => Color::from_rgba8(255, 214, 0, 0.2),
                 CustomTextInput::Error => Color::from_rgba8(221, 44, 0, 0.2),
             }),
-            border_radius: 0,
+            border_radius: 12,
             border_color: Color::BLACK,
             border_width: 0,
         }
@@ -28,7 +28,7 @@ impl text_input::StyleSheet for CustomTextInput {
 
     fn focused(&self) -> text_input::Style {
         text_input::Style {
-            // border_width: 1,
+            border_width: 1,
             ..self.active()
         }
     }
