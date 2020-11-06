@@ -5,8 +5,8 @@ use iced_native::{
         flex::{self, Axis},
         Limits, Node,
     },
-    mouse, Align, Background, Clipboard, Color, Element, Event, Hasher, Layout, Length, Point,
-    Rectangle, Widget,
+    mouse, overlay, Align, Background, Clipboard, Color, Element, Event, Hasher, Layout, Length,
+    Point, Rectangle, Widget,
 };
 
 pub struct Card<'a, Message, Renderer: self::Renderer> {
@@ -211,6 +211,14 @@ where
             &self.children,
             &self.style,
         )
+    }
+
+    fn overlay(&mut self, layout: Layout<'_>) -> Option<overlay::Element<'_, Message, Renderer>> {
+        self.children
+            .iter_mut()
+            .zip(layout.children())
+            .filter_map(|(child, layout)| child.overlay(layout))
+            .next()
     }
 }
 

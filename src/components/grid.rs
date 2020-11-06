@@ -2,13 +2,17 @@ use iced_graphics::{Backend, Defaults, Primitive};
 use iced_native::{
     layout::{
         flex::{self, Axis},
-        Limits, Node, 
-    }, 
-    mouse, Align, Element, Hasher, Layout, Length, Point, Rectangle, Size, Widget, Event, Clipboard, overlay
+        Limits, Node,
+    },
+    mouse, overlay, Align, Clipboard, Element, Event, Hasher, Layout, Length, Point, Rectangle,
+    Size, Widget,
 };
 use std::{any::TypeId, hash::Hash, iter};
 
+/// A container that produces a grid layout.
 pub struct Grid<'a, Message, Renderer> {
+    width: Length,
+    height: Length,
     padding: u16,
     columns: Option<usize>,
     column_width: Option<u16>,
@@ -16,8 +20,6 @@ pub struct Grid<'a, Message, Renderer> {
 }
 
 impl<'a, Message, Renderer> Grid<'a, Message, Renderer>
-where
-    Renderer: self::Renderer,
 {
     pub fn new() -> Self {
         Self::with_children(Vec::new())
@@ -25,11 +27,23 @@ where
 
     pub fn with_children(children: Vec<Element<'a, Message, Renderer>>) -> Self {
         Self {
-            padding: Renderer::DEFAULT_PADDING,
+            width: Length::Fill,
+            height: Length::Shrink,
+            padding: 0,
             columns: None,
             column_width: None,
             children,
         }
+    }
+
+    pub fn width(mut self, width: Length) -> Self {
+        self.width = width;
+        self
+    }
+
+    pub fn height(mut self, height: Length) -> Self {
+        self.height = height;
+        self
     }
 
     pub fn padding(mut self, units: u16) -> Self {
@@ -43,7 +57,6 @@ where
         } else {
             self.columns = Some(columns);
         }
-
         self
     }
 
@@ -52,29 +65,27 @@ where
         self
     }
 
-    pub fn push<E>(mut self, children: E) -> Self
+    pub fn push<E>(mut self, child: E) -> Self
     where
         E: Into<Element<'a, Message, Renderer>>,
     {
-        self.children.push(children.into());
+        self.children.push(child.into());
         self
     }
 }
 
-impl<'a, Message, Renderer> Widget<Message, Renderer> for Grid<'a, Message, Renderer>
+impl<'a, Message, Renderer> Widget<Message, Renderer> 
+    for Grid<'a, Message, Renderer>
 where
+    Message: Clone,
     Renderer: self::Renderer,
 {
     fn width(&self) -> Length {
-        if self.columns.is_some() {
-            Length::Shrink
-        } else {
-            Length::Fill
-        }
+        self.width
     }
 
     fn height(&self) -> Length {
-        Length::Shrink
+        self.height
     }
 
     fn layout(&self, renderer: &Renderer, limits: &Limits) -> Node {
@@ -82,11 +93,7 @@ where
             Node::new(Size::ZERO)
         } else {
             let padding = f32::from(self.padding);
-            let column_limits = if let Some(column_width) = self.column_width {
-                limits.width(Length::Units(column_width))
-            } else {
-                *limits
-            };
+            let limits = limits.width(self.width).height(self.height).pad(padding);
             // if we have a given number of columns, we can find out how
             // wide a column is by finding the widest cell in it
             if let Some(columns) = self.columns {
@@ -96,7 +103,7 @@ where
                 let mut column_widths = Vec::<f32>::with_capacity(columns);
 
                 for (column, element) in (0..columns).cycle().zip(&self.children) {
-                    let layout = element.layout(renderer, &column_limits).size();
+                    let layout = element.layout(renderer, &limits).size();
                     layouts.push(layout);
 
                     if let Some(column_width) = column_widths.get_mut(column) {
@@ -126,7 +133,7 @@ where
                     }
 
                     let mut node = Node::new(size);
-                    node.move_to(Point::new(column_align, grid_height));
+                    node.move_to(Point::new(column_align + padding, grid_height + padding));
                     nodes.push(node);
                     row_height = row_height.max(size.height);
                 }
@@ -151,7 +158,7 @@ where
                         row_height = 0.;
                     }
 
-                    let size = element.layout(renderer, &column_limits).size();
+                    let size = element.layout(renderer, &limits).size();
                     let mut node = Node::new(size);
                     node.move_to(Point::new((column as f32) * column_width, grid_height));
                     nodes.push(node);
@@ -190,51 +197,50 @@ where
     }
 
     fn hash_layout(&self, state: &mut Hasher) {
-        TypeId::of::<Grid<'_, (), ()>>().hash(state);
+        struct Marker;
+        TypeId::of::<Marker>().hash(state);
 
         self.padding.hash(state);
-        for e in &self.children {
-            e.hash_layout(state);
-        }
+        self.children.iter().for_each(|child| {
+            child.hash_layout(state);
+        });
     }
 
-    // fn on_event(
-    //     &mut self,
-    //     event: Event,
-    //     layout: Layout<'_>,
-    //     cursor_position: Point,
-    //     messages: &mut Vec<Message>,
-    //     renderer: &Renderer,
-    //     clipboard: Option<&dyn Clipboard>,
-    // ) {
-    //     self.children.iter_mut().zip(layout.children()).for_each(
-    //         |(child, layout)| {
-    //             child.widget.on_event(
-    //                 event.clone(),
-    //                 layout,
-    //                 cursor_position,
-    //                 messages,
-    //                 renderer,
-    //                 clipboard,
-    //             )
-    //         },
-    //     );
-    // }
+    fn on_event(
+        &mut self,
+        event: Event,
+        layout: Layout<'_>,
+        cursor_position: Point,
+        messages: &mut Vec<Message>,
+        renderer: &Renderer,
+        clipboard: Option<&dyn Clipboard>,
+    ) {
+        self.children
+            .iter_mut()
+            .zip(layout.children())
+            .for_each(|(child, layout)| {
+                child.on_event(
+                    event.clone(),
+                    layout,
+                    cursor_position,
+                    messages,
+                    renderer,
+                    clipboard,
+                )
+            });
+    }
 
-    // fn overlay(
-    //     &mut self,
-    //     layout: Layout<'_>,
-    // ) -> Option<overlay::Element<'_, Message, Renderer>> {
-    //     self.children
-    //         .iter_mut()
-    //         .zip(layout.children())
-    //         .filter_map(|(child, layout)| child.widget.overlay(layout))
-    //         .next()
-    // }
+    fn overlay(&mut self, layout: Layout<'_>) -> Option<overlay::Element<'_, Message, Renderer>> {
+        self.children
+            .iter_mut()
+            .zip(layout.children())
+            .filter_map(|(child, layout)| child.overlay(layout))
+            .next()
+    }
 }
 
-pub trait Renderer: iced_native::Renderer + Sized{
-    const DEFAULT_PADDING: u16;
+pub trait Renderer: iced_native::Renderer + Sized {
+    // const DEFAULT_PADDING: u16;
 
     fn draw<Message>(
         &mut self,
@@ -250,7 +256,7 @@ impl<B> Renderer for iced_graphics::Renderer<B>
 where
     B: Backend,
 {
-    const DEFAULT_PADDING: u16 = 8;
+    // const DEFAULT_PADDING: u16 = 8;
 
     fn draw<Message>(
         &mut self,
@@ -284,10 +290,11 @@ where
     }
 }
 
-impl<'a, Message, Renderer> From<Grid<'a, Message, Renderer>> for Element<'a, Message, Renderer>
+impl<'a, Message, Renderer> From<Grid<'a, Message, Renderer>> 
+    for Element<'a, Message, Renderer>
 where
     Renderer: 'a + self::Renderer,
-    Message: 'static,
+    Message: 'a + Clone,
 {
     fn from(grid: Grid<'a, Message, Renderer>) -> Element<'a, Message, Renderer> {
         Element::new(grid)

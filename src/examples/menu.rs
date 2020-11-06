@@ -2,8 +2,8 @@ use super::app::{App, AppMessage};
 use crate::components::grid::Grid;
 use crate::styles::custom_text_input::CustomTextInput;
 use iced::{
-    button, executor, scrollable, text_input, Align, Application, Column, Command, Container,
-    Element, Length, Scrollable, Settings, TextInput
+    button, executor, scrollable, text_input, Align, Application, Color, Column, Command,
+    Container, Element, Length, Scrollable, Settings, TextInput,
 };
 
 pub struct Menu {
@@ -194,10 +194,7 @@ impl Application for Menu {
         .size(17)
         .style(CustomTextInput::Default)
         .on_submit(MenuMessage::ActionSearch);
-        let search_section = Container::new(search)
-            .center_x()
-            .center_y()
-            .align_x(Align::Center);
+        let search_section = Container::new(search).center_x().center_y();
 
         // let search_section = Row::new()
         //     .push(Space::with_width(Length::FillPortion(2)))
@@ -211,6 +208,7 @@ impl Application for Menu {
             .fold(Grid::new().column_width(175), |grid, (i, app)| {
                 grid.push(
                     app.view()
+                        .explain(Color::BLACK)
                         .map(move |message| MenuMessage::AppMessage(i, message)),
                 )
             })
@@ -220,7 +218,7 @@ impl Application for Menu {
             .spacing(20)
             .align_items(Align::Center)
             .push(search_section)
-            .push(menu);
+            .push(menu.explain(Color::BLACK));
 
         Scrollable::new(&mut self.scroll)
             .padding(30)

@@ -25,9 +25,7 @@ impl App {
 
     pub fn update(&mut self, message: AppMessage) {
         match message {
-            AppMessage::AppClicked => {
-                self.icon = '\u{f09b}';
-            }
+            AppMessage::AppClicked => {}
         }
     }
 
@@ -37,6 +35,8 @@ impl App {
         // let name = Text::new(&self.name).size(15);
         // let app = Column::new()
         //     .align_items(Align::Center)
+        //     .width(Length::Fill)
+        //     .height(Length::Fill)
         //     .push(icon)
         //     .push(name);
         // let app_btn = Button::new(&mut self.clickable, app)
@@ -46,8 +46,8 @@ impl App {
         // Container::new(app_btn)
         //     .center_x()
         //     .center_y()
-        //     .width(Length::Shrink)
-        //     .height(Length::Shrink)
+        //     .width(Length::Fill)
+        //     .height(Length::Fill)
         //     .into()
     }
 }
