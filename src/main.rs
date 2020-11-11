@@ -8,7 +8,7 @@ use examples::menu::Menu;
 use examples::stack_demo::StackDemo;
 
 fn main() -> iced::Result {
-    // Menu::init()
-    CardTest::init()
+    Menu::init()
+    // CardTest::init()
     // StackDemo::init()
 }

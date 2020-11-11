@@ -8,12 +8,9 @@ edition = "2018"
 
 [dependencies]
 iced = {git = "https://github.com/hecrj/iced.git", features = ["debug"]}
-chrono = "0.4"
-rand = "0.7.3"
 iced_futures = {git = "https://github.com/hecrj/iced.git"}
-async-std = {version = "1.6.5", features = ["unstable"]}
 iced_winit = {git = "https://github.com/hecrj/iced.git"}
 iced_native = {git = "https://github.com/hecrj/iced.git"}
 iced_wgpu = {git = "https://github.com/hecrj/iced.git"}
 iced_graphics = {git = "https://github.com/hecrj/iced.git"}
-num = "0.3.1"
+iced_style = {git = "https://github.com/hecrj/iced.git"}

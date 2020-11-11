@@ -2,7 +2,7 @@ use super::app::{App, AppMessage};
 use crate::components::grid::Grid;
 use crate::styles::custom_text_input::CustomTextInput;
 use iced::{
-    button, executor, scrollable, text_input, Align, Application, Color, Column, Command,
+    button, executor, scrollable, text_input, window, Align, Application, Color, Column, Command,
     Container, Element, Length, Scrollable, Settings, TextInput,
 };
 // use crate::components::k_button;
@@ -17,7 +17,19 @@ pub struct Menu {
 
 impl Menu {
     pub fn init() -> iced::Result {
-        Menu::run(Settings::default())
+        let settings = Settings {
+            default_font: Some(include_bytes!("../../fonts/ProductSans-Regular.ttf")),
+            default_text_size: 13,
+            antialiasing: true,
+            window: window::Settings {
+                resizable: true,
+                transparent: true,
+                decorations: true,
+                ..window::Settings::default()
+            },
+            ..Settings::default()
+        };
+        Menu::run(settings)
     }
 }
 #[derive(Debug, Clone)]
@@ -197,19 +209,13 @@ impl Application for Menu {
         .on_submit(MenuMessage::ActionSearch);
         let search_section = Container::new(search).center_x().center_y();
 
-        // let search_section = Row::new()
-        //     .push(Space::with_width(Length::FillPortion(2)))
-        //     .push(Container::new(search).width(Length::FillPortion(3)))
-        //     .push(Space::with_width(Length::FillPortion(2)));
-
         let menu: Element<_> = self
             .filtered_application
             .iter_mut()
             .enumerate()
-            .fold(Grid::new().column_width(175), |grid, (i, app)| {
+            .fold(Grid::new().column_width(175).padding(20).spacing(20), |grid, (i, app)| {
                 grid.push(
                     app.view()
-                        .explain(Color::BLACK)
                         .map(move |message| MenuMessage::AppMessage(i, message)),
                 )
             })
@@ -219,16 +225,14 @@ impl Application for Menu {
             .spacing(20)
             .align_items(Align::Center)
             .push(search_section)
-            .push(menu.explain(Color::BLACK));
+            .push(menu);
 
         Scrollable::new(&mut self.scroll)
             .padding(30)
-            .push(
-                Container::new(content)
-                    .width(Length::Fill)
-                    .center_y()
-                    .center_x(),
-            )
-            .into()
+            .push( Container::new(content)
+                .width(Length::Fill)
+                .center_y()
+                .center_x()
+            ).into()
     }
 }

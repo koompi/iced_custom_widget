@@ -11,13 +11,13 @@ use iced_graphics::{
 use crate::styles::stepper::StyleSheet;
 
 pub struct Stepper<'a, Message, Renderer: self::Renderer + text::Renderer> {
-   current_value: f32,
+   value: f32,
    step: f32,
    min: f32,
    max: f32,
    spacing: u16,
    padding: u16,
-   current_value_width: Option<u16>,
+   value_width: Option<u16>,
    text_size: Option<u16>,
    decrease_btn_state: &'a mut State,
    increase_btn_state: &'a mut State,
@@ -28,16 +28,16 @@ pub struct Stepper<'a, Message, Renderer: self::Renderer + text::Renderer> {
 
 impl<'a, Message, Renderer> Stepper<'a, Message, Renderer>
 where Renderer: text::Renderer + self::Renderer {
-   pub fn new<F>(current_value: f32, decrease_btn_state: &'a mut State, increase_btn_state: &'a mut State, on_changed: F) -> Self
+   pub fn new<F>(value: f32, decrease_btn_state: &'a mut State, increase_btn_state: &'a mut State, on_changed: F) -> Self
    where F: 'static + Fn(f32) -> Message {
       Self {
-         current_value,
+         value,
          step: 1.,
          min: 0.,
          max: 100.,
          spacing: 0,
          padding: Renderer::DEFAULT_PADDING,
-         current_value_width: None,
+         value_width: None,
          text_size: None,
          decrease_btn_state,
          increase_btn_state,
@@ -72,8 +72,8 @@ where Renderer: text::Renderer + self::Renderer {
       self
    }
 
-   pub fn current_value_width(mut self, current_value_width: u16) -> Self {
-      self.current_value_width = Some(current_value_width);
+   pub fn value_width(mut self, value_width: u16) -> Self {
+      self.value_width = Some(value_width);
       self
    }
 
@@ -115,12 +115,12 @@ where
          .width(Length::Shrink)
          .height(Length::Shrink)
          .pad(f32::from(self.padding));
-      let mut current_value = Container::<(), Renderer>::new(
-         Text::new(format!("{:.2}", self.current_value)).size(renderer.default_size())
+      let mut value = Container::<(), Renderer>::new(
+         Text::new(format!("{:.2}", self.value)).size(renderer.default_size())
       ).center_y().center_x().padding(self.padding);
 
-      if let Some(width) = self.current_value_width {
-         current_value = current_value.width(Length::Units(width));
+      if let Some(width) = self.value_width {
+         value = value.width(Length::Units(width));
       }
 
       // size is width & height of button (text_size + padding * 2)
@@ -132,7 +132,7 @@ where
          .push(
             Row::new().padding(self.padding).width(Length::Units(size)).height(Length::Units(size))
          )
-         .push(current_value)
+         .push(value)
          .push(
             Row::new().padding(self.padding).width(Length::Units(size)).height(Length::Units(size))
          )
@@ -149,24 +149,24 @@ where
    ) -> Renderer::Output {
       let mut children = layout.children();
       let decrease_btn_bounds = children.next().unwrap().bounds();
-      let current_value_bounds = children.next().unwrap().bounds();
+      let value_bounds = children.next().unwrap().bounds();
       let increase_btn_bounds = children.next().unwrap().bounds();
 
-      let current_value = text::Renderer::draw(
+      let value = text::Renderer::draw(
          renderer,
          defaults,
-         current_value_bounds,
-         format!("{:.2}", self.current_value).as_str(),
+         value_bounds,
+         format!("{:.2}", self.value).as_str(),
          self.text_size.unwrap_or(renderer.default_size()),
          self.font,
          None,
          HorizontalAlignment::Center,
          VerticalAlignment::Center,
       );
-      let is_decrease_disabled = self.current_value == self.min;
-      let is_increase_disabled = self.current_value == self.max;
+      let is_decrease_disabled = self.value == self.min;
+      let is_increase_disabled = self.value == self.max;
 
-      self::Renderer::draw(renderer, cursor_position, self.decrease_btn_state.is_pressed, is_decrease_disabled, self.increase_btn_state.is_pressed, is_increase_disabled ,decrease_btn_bounds, current_value_bounds, increase_btn_bounds, current_value, &self.font, &self.style)
+      self::Renderer::draw(renderer, cursor_position, self.decrease_btn_state.is_pressed, is_decrease_disabled, self.increase_btn_state.is_pressed, is_increase_disabled ,decrease_btn_bounds, value_bounds, increase_btn_bounds, value, &self.font, &self.style)
    }
 
    fn hash_layout(&self, state: &mut Hasher) {
@@ -187,30 +187,30 @@ where
             if mouse_over {
                let mut children = layout.children();
                let decrease_btn_layout = children.next().unwrap();
-               let _current_value_layout = children.next().unwrap();
+               let _value_layout = children.next().unwrap();
                let increase_btn_layout = children.next().unwrap();
 
                if decrease_btn_layout.bounds().contains(cursor_position) {
                   self.decrease_btn_state.is_pressed = true;
-                  self.current_value -= self.step;
-                  if self.current_value < self.min {
-                     self.current_value = self.min
+                  self.value -= self.step;
+                  if self.value < self.min {
+                     self.value = self.min
                   }
-                  messages.push((self.on_changed)(self.current_value));
+                  messages.push((self.on_changed)(self.value));
                } else if increase_btn_layout.bounds().contains(cursor_position) {
                   self.increase_btn_state.is_pressed = true;
-                  self.current_value += self.step;
-                  if self.current_value > self.max {
-                     self.current_value = self.max
+                  self.value += self.step;
+                  if self.value > self.max {
+                     self.value = self.max
                   }
-                  messages.push((self.on_changed)(self.current_value));
+                  messages.push((self.on_changed)(self.value));
                }
             }
          },
          Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
             let mut children = layout.children();
             let decrease_btn_layout = children.next().unwrap();
-            let _current_value_layout = children.next().unwrap();
+            let _value_layout = children.next().unwrap();
             let increase_btn_layout = children.next().unwrap();
             if decrease_btn_layout.bounds().contains(cursor_position) {
                self.decrease_btn_state.is_pressed = false;
@@ -239,9 +239,9 @@ pub trait Renderer : iced_native::Renderer + text::Renderer  {
       is_increase_pressed: bool,
       is_increase_disabled: bool,
       decrease_btn_bounds: Rectangle,
-      current_value_bounds: Rectangle,
+      value_bounds: Rectangle,
       increase_btn_bounds: Rectangle,
-      current_value: Self::Output,
+      value: Self::Output,
       font: &Self::Font,
       style: &Self::Style,
   ) -> Self::Output;
@@ -260,9 +260,9 @@ where B: Backend + backend::Text
       is_increase_pressed: bool,
       is_increase_disabled: bool,
       decrease_btn_bounds: Rectangle,
-      current_value_bounds: Rectangle,
+      value_bounds: Rectangle,
       increase_btn_bounds: Rectangle,
-      (current_value, _): Self::Output,
+      (value, _): Self::Output,
       font: &Self::Font,
       style: &Self::Style,
    ) -> Self::Output {
@@ -288,7 +288,6 @@ where B: Backend + backend::Text
       } else {
          style.active()
       };
-      
 
       // decrease button section
       let decrease_button_rect = Primitive::Quad {
@@ -314,14 +313,14 @@ where B: Backend + backend::Text
       let decrease_btn = Primitive::Group{ primitives: vec![decrease_button_rect, decrease_text] };
 
       // current value container section
-      let current_value_rect = Primitive::Quad {
-         bounds: current_value_bounds,
+      let value_rect = Primitive::Quad {
+         bounds: value_bounds,
          background: decrease_btn_style.text_background.unwrap_or(Background::Color([0.7, 0.7, 0.7].into())),
          border_radius: 0,
          border_width: 0,
          border_color: Color::TRANSPARENT,
       };
-      let current_value_container = Primitive::Group{ primitives: vec![current_value_rect, current_value] };
+      let value_container = Primitive::Group{ primitives: vec![value_rect, value] };
 
       // increase button section
       let increase_button_rect = Primitive::Quad {
@@ -347,7 +346,7 @@ where B: Backend + backend::Text
       let increase_btn = Primitive::Group{ primitives: vec![increase_button_rect, increase_text] };
 
       (
-         Primitive::Group{ primitives: vec![decrease_btn, current_value_container, increase_btn] },
+         Primitive::Group{ primitives: vec![decrease_btn, value_container, increase_btn] },
          if mouse_over_decrease || mouse_over_increase {
             mouse::Interaction::Pointer
          } else {

@@ -4,15 +4,16 @@ use iced_native::{
         flex::{self, Axis},
         Limits, Node,
     },
-    mouse, overlay, container, Align, Clipboard, Element, Event, Hasher, Layout, Length, Point, Rectangle,
+    mouse, container, Align, Clipboard, Element, Event, Hasher, Layout, Length, Point, Rectangle,
     Size, Widget,
 };
 
 /// A container that produces a grid layout.
-pub struct Grid<'a, Message, Renderer>
-where Renderer: self::Renderer {
+/// A scrollable, 2D array of widgets.
+pub struct Grid<'a, Message, Renderer> {
     width: Length,
     height: Length,
+    spacing: u16,
     padding: u16,
     columns: Option<usize>,
     column_width: Option<u16>,
@@ -20,9 +21,8 @@ where Renderer: self::Renderer {
 }
 
 impl<'a, Message, Renderer> Grid<'a, Message, Renderer>
-where 
-    Message: 'a,
-    Renderer: 'a + self::Renderer,
+where
+    Renderer: self::Renderer 
 {
     pub fn new() -> Self {
         Self::with_children(Vec::new())
@@ -32,7 +32,8 @@ where
         Self {
             width: Length::Fill,
             height: Length::Shrink,
-            padding: 0,
+            spacing: Renderer::DEFAULT_SPACING,
+            padding: Renderer::DEFAULT_PADDING,
             columns: None,
             column_width: None,
             children,
@@ -51,6 +52,11 @@ where
 
     pub fn padding(mut self, units: u16) -> Self {
         self.padding = units;
+        self
+    }
+
+    pub fn spacing(mut self, units: u16) -> Self {
+        self.spacing = units;
         self
     }
 
@@ -80,8 +86,7 @@ where
 impl<'a, Message, Renderer> Widget<Message, Renderer> 
     for Grid<'a, Message, Renderer>
 where
-    Message: 'a,
-    Renderer: 'a + self::Renderer,
+    Renderer: self::Renderer,
 {
     fn width(&self) -> Length {
         self.width
@@ -96,23 +101,19 @@ where
             Node::new(Size::ZERO)
         } else {
             let padding = f32::from(self.padding);
-            let limits = limits.width(self.width).height(self.height).pad(padding);
+            let spacing = f32::from(self.spacing);
+            let limits = limits.width(self.width).height(self.height);
             // if we have a given number of columns, we can find out how
             // wide a column is by finding the widest cell in it
             if let Some(columns) = self.columns {
-                // store calculated layout sizes
-                let mut layouts = Vec::with_capacity(self.children.len());
                 // store width of each column
                 let mut column_widths = Vec::<f32>::with_capacity(columns);
 
                 for (column, element) in (0..columns).cycle().zip(&self.children) {
-                    let layout = element.layout(renderer, &limits).size();
-                    layouts.push(layout);
-
                     if let Some(column_width) = column_widths.get_mut(column) {
-                        *column_width = column_width.max(layout.width);
+                        *column_width = column_width.max(element.layout(renderer, &limits).size().width);
                     } else {
-                        column_widths.insert(column, layout.width);
+                        column_widths.insert(column, element.layout(renderer, &limits).size().width);
                     }
                 }
 
@@ -127,24 +128,29 @@ where
                 let mut nodes = Vec::with_capacity(self.children.len());
                 let mut grid_height = 0.;
                 let mut row_height = 0.;
+                let mut offset = 0.;
 
-                for ((column, column_align), size) in column_aligns.enumerate().cycle().zip(layouts)
+                for ((column, column_align), element) in column_aligns.enumerate().cycle().zip(&self.children)
                 {
+                    let mut node = element.layout(renderer, &limits);
+                    let size = node.size();
                     if column == 0 {
                         grid_height += row_height;
                         row_height = 0.;
+                        offset = 0.;
+                        node.move_to(Point::new(column_align + padding, grid_height + padding));
+                    } else {
+                        offset += spacing;
+                        node.move_to(Point::new(column_align + padding + offset, grid_height + padding));
                     }
-
-                    let mut node = Node::new(size);
-                    node.move_to(Point::new(column_align + padding, grid_height + padding));
+                    row_height = row_height.max(size.height + spacing);
                     nodes.push(node);
-                    row_height = row_height.max(size.height);
                 }
 
                 grid_height += row_height;
-                let grid_width = column_widths.into_iter().sum();
+                let grid_width: f32 = column_widths.into_iter().sum();
 
-                Node::with_children(Size::new(grid_width, grid_height), nodes)
+                Node::with_children(Size::new(grid_width + (padding * 2.) + (spacing * (columns as f32 - 1.)), grid_height + padding), nodes)
             // if we have `column_width` but no `columns`, calculate number of
             // columns by checking how many can fit
             } else if let Some(column_width) = self.column_width {
@@ -154,24 +160,37 @@ where
                 let mut nodes = Vec::with_capacity(self.children.len());
                 let mut grid_height = 0.;
                 let mut row_height = 0.;
+                let mut offset = 0.;
 
-                for (column, element) in (0..columns).cycle().zip(&self.children) {
+                for ((idx, column), element) in (0..columns).cycle().enumerate().zip(&self.children) {
+                    let mut node = element.layout(renderer, &limits);
+                    let size = node.size();
+                    offset = (column_width - size.width) / 2.;
                     if column == 0 {
                         grid_height += row_height;
                         row_height = 0.;
                     }
-
-                    let size = element.layout(renderer, &limits).size();
-                    let mut node = Node::new(size);
-                    node.move_to(Point::new((column as f32) * column_width, grid_height));
+                    if padding != 0. {
+                        offset = padding;
+                    }
+                    if idx == column as usize {
+                        node.move_to(Point::new((column as f32) * column_width + offset, grid_height + padding));
+                        row_height = row_height.max(size.height + padding);
+                    } else {
+                        node.move_to(Point::new((column as f32) * column_width + offset, grid_height + spacing));
+                        row_height = row_height.max(size.height + spacing);
+                    }
                     nodes.push(node);
-                    row_height = row_height.max(size.height);
                 }
-
                 grid_height += row_height;
                 let grid_width = (columns as f32) * column_width;
 
-                Node::with_children(Size::new(grid_width, grid_height), nodes)
+                if padding != 0. {
+                    Node::with_children(Size::new(grid_width + padding, grid_height + padding), nodes)
+                } else {
+                    Node::with_children(Size::new(grid_width, grid_height + padding), nodes)
+                }
+                
             // if we didn't define `columns` and `column_width` just put them
             // horizontally next to each other
             } else {
@@ -245,7 +264,8 @@ where
 }
 
 pub trait Renderer: iced_native::Renderer + container::Renderer + Sized {
-    // const DEFAULT_PADDING: u16;
+    const DEFAULT_PADDING: u16;
+    const DEFAULT_SPACING: u16;
 
     fn draw<Message>(
         &mut self,
@@ -261,7 +281,8 @@ impl<B> Renderer for iced_graphics::Renderer<B>
 where
     B: Backend,
 {
-    // const DEFAULT_PADDING: u16 = 8;
+    const DEFAULT_PADDING: u16 = 0;
+    const DEFAULT_SPACING: u16 = 8;
 
     fn draw<Message>(
         &mut self,
