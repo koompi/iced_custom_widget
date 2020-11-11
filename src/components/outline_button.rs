@@ -302,13 +302,3 @@ where
         Element::new(outline_button)
     }
 }
-
-
-impl<T> From<T> for Box<dyn StyleSheet>
-where
-    T: 'static + StyleSheet,
-{
-    fn from(style: T) -> Self {
-        Box::new(style)
-    }
-}

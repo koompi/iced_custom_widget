@@ -9,6 +9,6 @@ use examples::stack_demo::StackDemo;
 
 fn main() -> iced::Result {
     // Menu::init()
-    // CardTest::init()
-    StackDemo::init()
+    CardTest::init()
+    // StackDemo::init()
 }

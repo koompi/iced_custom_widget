@@ -1,5 +1,6 @@
 use crate::components::icon::Icon;
-use crate::styles::custom_button::CustomButton;
+// use crate::components::k_button::{self, KButtton};
+// use crate::styles::custom_button::CustomButton;
 use iced::{button, Align, Button, Column, Container, Element, Length, Text};
 
 #[derive(Debug, Clone)]
@@ -39,9 +40,9 @@ impl App {
         //     .height(Length::Fill)
         //     .push(icon)
         //     .push(name);
-        // let app_btn = Button::new(&mut self.clickable, app)
+        // let container = Container::new(app);
+        // let app_btn = Button::new(&mut self.clickable, container)
         //     .padding(10)
-        //     .style(CustomButton::Default)
         //     .on_press(AppMessage::AppClicked);
         // Container::new(app_btn)
         //     .center_x()

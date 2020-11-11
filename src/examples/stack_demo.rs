@@ -34,30 +34,30 @@ impl Sandbox for StackDemo {
         String::from("Stack Widget Demo")
     }
 
-    fn update(&mut self, message: Message) {
+    fn update(&mut self, message: Self::Message) {
         match message {
             Message::ToggleOverflow(is_overflow) => self.is_overflow = is_overflow,
             Message::ButtonPressed => println!("button outline pressed")
         }
     }
 
-    fn view(&mut self) -> Element<Message> {
+    fn view(&mut self) -> Element<Self::Message> {
         let overflow_checkbox =
             Checkbox::new(self.is_overflow, "Overflow", Message::ToggleOverflow);
-        let container1 = Container::new(Text::new("label1"))
-            .width(Length::Units(200))
-            .height(Length::Units(100));
-        let container2 = Container::new(Text::new("label2"))
-            .width(Length::Units(150))
-            .height(Length::Units(150));
+        // let container1 = Container::new(Text::new("label1"))
+        //     .width(Length::Units(200))
+        //     .height(Length::Units(100));
+        // let container2 = Container::new(Text::new("label2"))
+        //     .width(Length::Units(150))
+        //     .height(Length::Units(150));
         let button = OutlineButton::new(&mut self.btn_state, Text::new("Click me!"))
             .on_press(Message::ButtonPressed);
         let text1 = Text::new("label1");
         let text2 = Text::new("23223");
         let move_pos = Point::new(10., 10.);
         let stack_content = Stack::new()
-            .push(container1, None)
-            .push(container2, Some(move_pos));
+            .push(text1, None)
+            .push(text2, Some(move_pos));
         Column::new()
             .width(Length::Fill)
             .height(Length::Fill)

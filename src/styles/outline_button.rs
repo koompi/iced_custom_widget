@@ -1,4 +1,4 @@
-use iced_native::{Background, Color, Vector};
+use iced_native::{Color};
 
 pub struct Style {
    pub border_radius: u16,
@@ -55,6 +55,15 @@ impl StyleSheet for Default {
             border_color: [0.8, 0.8, 0.8].into(),
             text_color: Color::BLACK,
         }
+    }
+}
+
+impl<T> From<T> for Box<dyn StyleSheet>
+where
+    T: 'static + StyleSheet,
+{
+    fn from(style: T) -> Self {
+        Box::new(style)
     }
 }
 

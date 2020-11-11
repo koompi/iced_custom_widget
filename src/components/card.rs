@@ -234,7 +234,7 @@ impl State {
 }
 
 pub trait Renderer: iced_native::Renderer {
-    type Style: std::default::Default;
+    type Style: Default;
 
     const DEFAULT_PADDING: u16;
     const DEFAULT_SPACING: u16;
@@ -347,14 +347,5 @@ where
 {
     fn from(card: Card<'a, Message, Renderer>) -> Element<'a, Message, Renderer> {
         Element::new(card)
-    }
-}
-
-impl<T> From<T> for Box<dyn StyleSheet>
-where
-    T: 'static + StyleSheet,
-{
-    fn from(style: T) -> Self {
-        Box::new(style)
     }
 }

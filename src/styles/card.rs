@@ -1,5 +1,6 @@
 use iced_native::{Background, Color, Vector};
 
+#[derive(Debug)]
 pub struct Style {
     pub shadow_offset: Vector,
     pub background: Option<Background>,
@@ -22,7 +23,6 @@ impl std::default::Default for Style {
     }
 }
 
-/// A set of rules that dictate the style of a button.
 pub trait StyleSheet {
     fn active(&self) -> Style;
 
@@ -31,10 +31,7 @@ pub trait StyleSheet {
     }
 
     fn pressed(&self) -> Style {
-        Style {
-            shadow_offset: Vector::default(),
-            ..self.active()
-        }
+        self.active()
     }
 
     fn disabled(&self) -> Style {
@@ -75,5 +72,14 @@ impl StyleSheet for Default {
 impl std::default::Default for Box<dyn StyleSheet> {
     fn default() -> Self {
         Box::new(Default)
+    }
+}
+
+impl<T> From<T> for Box<dyn StyleSheet>
+where
+    T: 'static + StyleSheet,
+{
+    fn from(style: T) -> Self {
+        Box::new(style)
     }
 }

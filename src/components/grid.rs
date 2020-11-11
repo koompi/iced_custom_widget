@@ -4,13 +4,13 @@ use iced_native::{
         flex::{self, Axis},
         Limits, Node,
     },
-    mouse, overlay, Align, Clipboard, Element, Event, Hasher, Layout, Length, Point, Rectangle,
+    mouse, overlay, container, Align, Clipboard, Element, Event, Hasher, Layout, Length, Point, Rectangle,
     Size, Widget,
 };
-use std::{any::TypeId, hash::Hash, iter};
 
 /// A container that produces a grid layout.
-pub struct Grid<'a, Message, Renderer> {
+pub struct Grid<'a, Message, Renderer>
+where Renderer: self::Renderer {
     width: Length,
     height: Length,
     padding: u16,
@@ -20,6 +20,9 @@ pub struct Grid<'a, Message, Renderer> {
 }
 
 impl<'a, Message, Renderer> Grid<'a, Message, Renderer>
+where 
+    Message: 'a,
+    Renderer: 'a + self::Renderer,
 {
     pub fn new() -> Self {
         Self::with_children(Vec::new())
@@ -77,8 +80,8 @@ impl<'a, Message, Renderer> Grid<'a, Message, Renderer>
 impl<'a, Message, Renderer> Widget<Message, Renderer> 
     for Grid<'a, Message, Renderer>
 where
-    Message: Clone,
-    Renderer: self::Renderer,
+    Message: 'a,
+    Renderer: 'a + self::Renderer,
 {
     fn width(&self) -> Length {
         self.width
@@ -114,7 +117,7 @@ where
                 }
 
                 // list of x alignments for every column
-                let column_aligns = iter::once(&0.)
+                let column_aligns = std::iter::once(&0.)
                     .chain(column_widths.iter().take(column_widths.len() - 1))
                     .scan(0., |state, width| {
                         *state += width;
@@ -193,10 +196,12 @@ where
         cursor_position: Point,
         viewport: &Rectangle,
     ) -> Renderer::Output {
-        renderer.draw(defaults, layout, cursor_position, viewport, &self.children)
+        self::Renderer::draw(renderer, defaults, layout, cursor_position, viewport, &self.children)
     }
 
     fn hash_layout(&self, state: &mut Hasher) {
+        use std::{any::TypeId, hash::Hash};
+
         struct Marker;
         TypeId::of::<Marker>().hash(state);
 
@@ -230,16 +235,16 @@ where
             });
     }
 
-    fn overlay(&mut self, layout: Layout<'_>) -> Option<overlay::Element<'_, Message, Renderer>> {
-        self.children
-            .iter_mut()
-            .zip(layout.children())
-            .filter_map(|(child, layout)| child.overlay(layout))
-            .next()
-    }
+    // fn overlay(&mut self, layout: Layout<'_>) -> Option<overlay::Element<'_, Message, Renderer>> {
+    //     self.children
+    //         .iter_mut()
+    //         .zip(layout.children())
+    //         .filter_map(|(child, layout)| child.overlay(layout))
+    //         .next()
+    // }
 }
 
-pub trait Renderer: iced_native::Renderer + Sized {
+pub trait Renderer: iced_native::Renderer + container::Renderer + Sized {
     // const DEFAULT_PADDING: u16;
 
     fn draw<Message>(
@@ -294,7 +299,7 @@ impl<'a, Message, Renderer> From<Grid<'a, Message, Renderer>>
     for Element<'a, Message, Renderer>
 where
     Renderer: 'a + self::Renderer,
-    Message: 'a + Clone,
+    Message: 'a,
 {
     fn from(grid: Grid<'a, Message, Renderer>) -> Element<'a, Message, Renderer> {
         Element::new(grid)
