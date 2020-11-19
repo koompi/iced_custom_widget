@@ -1,6 +1,7 @@
 use crate::styles::card::StyleSheet;
 use iced_graphics::{backend, Backend, Defaults, Primitive};
 use iced_native::{
+    event,
     layout::{
         flex::{self, Axis},
         Limits, Node,
@@ -167,7 +168,7 @@ where
         messages: &mut Vec<Message>,
         _renderer: &Renderer,
         _clipboard: Option<&dyn Clipboard>,
-    ) {
+    ) -> event::Status {
         match event {
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
                 if self.on_pressed.is_some() {
@@ -186,11 +187,14 @@ where
 
                     if is_clicked {
                         messages.push(on_pressed);
+                        return event::Status::Captured;
                     }
                 }
             }
             _ => {}
         }
+
+        event::Status::Ignored
     }
 
     fn draw(

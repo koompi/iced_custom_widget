@@ -1,6 +1,6 @@
 use crate::components::icon::Icon;
-use iced::{button, Align, Button, Column, Container, Element, Text};
 use crate::styles::custom_button::CustomButton;
+use iced::{button, Align, Button, Column, Container, Element, Text};
 #[derive(Debug, Clone)]
 pub struct App {
     pub icon: char,
@@ -40,9 +40,6 @@ impl App {
             .padding(10)
             .on_press(AppMessage::AppClicked)
             .style(CustomButton::Default);
-        Container::new(app_btn)
-            .center_x()
-            .center_y()
-            .into()
+        Container::new(app_btn).center_x().center_y().into()
     }
 }

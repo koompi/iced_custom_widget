@@ -1,15 +1,15 @@
-use iced_graphics::{Backend, Defaults, defaults, Primitive};
-use iced_native::{
-    layout::{
-        Limits, Node,
-    },
-    mouse, Background, Clipboard, Color, Element, Event, Hasher, Layout, Length,
-    Point, Rectangle, Widget
-};
 use crate::styles::outline_button::StyleSheet;
+use iced_graphics::{defaults, Backend, Defaults, Primitive};
+use iced_native::{
+    event::{self, Event},
+    layout::{Limits, Node},
+    mouse, Background, Clipboard, Color, Element, Hasher, Layout, Length, Point, Rectangle, Widget,
+};
 
 pub struct OutlineButton<'a, Message, Renderer>
-where Renderer: self::Renderer {
+where
+    Renderer: self::Renderer,
+{
     state: &'a mut State,
     content: Element<'a, Message, Renderer>,
     on_press: Option<Message>,
@@ -22,9 +22,9 @@ where Renderer: self::Renderer {
 }
 
 impl<'a, Message, Renderer> OutlineButton<'a, Message, Renderer>
-where 
+where
     Message: Clone,
-    Renderer: self::Renderer 
+    Renderer: self::Renderer,
 {
     pub fn new<E>(state: &'a mut State, content: E) -> Self
     where
@@ -80,9 +80,9 @@ where
 }
 
 impl<'a, Message, Renderer> Widget<Message, Renderer> for OutlineButton<'a, Message, Renderer>
-where 
-    Message: Clone, 
-    Renderer: self::Renderer
+where
+    Message: Clone,
+    Renderer: self::Renderer,
 {
     fn width(&self) -> Length {
         self.width
@@ -92,11 +92,7 @@ where
         self.height
     }
 
-    fn layout(
-        &self,
-        renderer: &Renderer,
-        limits: &Limits,
-    ) -> Node {
+    fn layout(&self, renderer: &Renderer, limits: &Limits) -> Node {
         // let button = Button::<Message, Renderer>::new(&mut self.state, self.content)
         //     .width(self.width)
         //     .height(self.height)
@@ -131,7 +127,7 @@ where
         messages: &mut Vec<Message>,
         _renderer: &Renderer,
         _clipboard: Option<&dyn Clipboard>,
-    ) {
+    ) -> event::Status {
         match event {
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
                 if self.on_press.is_some() {
@@ -144,18 +140,20 @@ where
                 if let Some(on_press) = self.on_press.clone() {
                     let bounds = layout.bounds();
 
-                    let is_clicked = self.state.is_pressed
-                        && bounds.contains(cursor_position);
+                    let is_clicked = self.state.is_pressed && bounds.contains(cursor_position);
 
                     self.state.is_pressed = false;
 
                     if is_clicked {
                         messages.push(on_press);
+                        return event::Status::Captured;
                     }
                 }
             }
             _ => {}
         }
+
+        event::Status::Ignored
     }
 
     fn draw(
@@ -216,7 +214,9 @@ pub trait Renderer: iced_native::Renderer {
 }
 
 impl<B> Renderer for iced_graphics::Renderer<B>
-where B: Backend {
+where
+    B: Backend,
+{
     const DEFAULT_PADDING: u16 = 8;
 
     type Style = Box<dyn StyleSheet>;
@@ -263,13 +263,12 @@ where B: Backend {
                 let background = Primitive::Quad {
                     bounds,
                     background: if is_disabled {
-                        Background::Color(Color::from_rgba8(240, 243, 244 , 0.3))
-                    } 
-                    else if is_pressed {
+                        Background::Color(Color::from_rgba8(240, 243, 244, 0.3))
+                    } else if is_pressed {
                         Background::Color(styling.border_color)
                     } else {
                         Background::Color(Color::from_rgba8(255, 255, 255, 0.3))
-                    } ,
+                    },
                     border_radius: styling.border_radius,
                     border_width: styling.border_width,
                     border_color: styling.border_color,

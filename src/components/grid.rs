@@ -1,11 +1,13 @@
 use iced_graphics::{Backend, Defaults, Primitive};
 use iced_native::{
+    container,
+    event::{self, Event},
     layout::{
         flex::{self, Axis},
         Limits, Node,
     },
-    mouse, container, Align, Clipboard, Element, Event, Hasher, Layout, Length, Point, Rectangle,
-    Size, Widget,
+    mouse, overlay, Align, Clipboard, Element, Hasher, Layout, Length, Point, Rectangle, Size,
+    Widget,
 };
 
 /// A container that produces a grid layout.
@@ -22,7 +24,7 @@ pub struct Grid<'a, Message, Renderer> {
 
 impl<'a, Message, Renderer> Grid<'a, Message, Renderer>
 where
-    Renderer: self::Renderer 
+    Renderer: self::Renderer,
 {
     pub fn new() -> Self {
         Self::with_children(Vec::new())
@@ -50,13 +52,13 @@ where
         self
     }
 
-    pub fn padding(mut self, units: u16) -> Self {
-        self.padding = units;
+    pub fn padding(mut self, padding: u16) -> Self {
+        self.padding = padding;
         self
     }
 
-    pub fn spacing(mut self, units: u16) -> Self {
-        self.spacing = units;
+    pub fn spacing(mut self, spacing: u16) -> Self {
+        self.spacing = spacing;
         self
     }
 
@@ -83,8 +85,7 @@ where
     }
 }
 
-impl<'a, Message, Renderer> Widget<Message, Renderer> 
-    for Grid<'a, Message, Renderer>
+impl<'a, Message, Renderer> Widget<Message, Renderer> for Grid<'a, Message, Renderer>
 where
     Renderer: self::Renderer,
 {
@@ -111,9 +112,11 @@ where
 
                 for (column, element) in (0..columns).cycle().zip(&self.children) {
                     if let Some(column_width) = column_widths.get_mut(column) {
-                        *column_width = column_width.max(element.layout(renderer, &limits).size().width);
+                        *column_width =
+                            column_width.max(element.layout(renderer, &limits).size().width);
                     } else {
-                        column_widths.insert(column, element.layout(renderer, &limits).size().width);
+                        column_widths
+                            .insert(column, element.layout(renderer, &limits).size().width);
                     }
                 }
 
@@ -130,7 +133,8 @@ where
                 let mut row_height = 0.;
                 let mut offset = 0.;
 
-                for ((column, column_align), element) in column_aligns.enumerate().cycle().zip(&self.children)
+                for ((column, column_align), element) in
+                    column_aligns.enumerate().cycle().zip(&self.children)
                 {
                     let mut node = element.layout(renderer, &limits);
                     let size = node.size();
@@ -141,7 +145,10 @@ where
                         node.move_to(Point::new(column_align + padding, grid_height + padding));
                     } else {
                         offset += spacing;
-                        node.move_to(Point::new(column_align + padding + offset, grid_height + padding));
+                        node.move_to(Point::new(
+                            column_align + padding + offset,
+                            grid_height + padding,
+                        ));
                     }
                     row_height = row_height.max(size.height + spacing);
                     nodes.push(node);
@@ -150,7 +157,13 @@ where
                 grid_height += row_height;
                 let grid_width: f32 = column_widths.into_iter().sum();
 
-                Node::with_children(Size::new(grid_width + (padding * 2.) + (spacing * (columns as f32 - 1.)), grid_height + padding), nodes)
+                Node::with_children(
+                    Size::new(
+                        grid_width + (padding * 2.) + (spacing * (columns as f32 - 1.)),
+                        grid_height + padding,
+                    ),
+                    nodes,
+                )
             // if we have `column_width` but no `columns`, calculate number of
             // columns by checking how many can fit
             } else if let Some(column_width) = self.column_width {
@@ -162,7 +175,8 @@ where
                 let mut row_height = 0.;
                 let mut offset = 0.;
 
-                for ((idx, column), element) in (0..columns).cycle().enumerate().zip(&self.children) {
+                for ((idx, column), element) in (0..columns).cycle().enumerate().zip(&self.children)
+                {
                     let mut node = element.layout(renderer, &limits);
                     let size = node.size();
                     offset = (column_width - size.width) / 2.;
@@ -174,10 +188,16 @@ where
                         offset = padding;
                     }
                     if idx == column as usize {
-                        node.move_to(Point::new((column as f32) * column_width + offset, grid_height + padding));
+                        node.move_to(Point::new(
+                            (column as f32) * column_width + offset,
+                            grid_height + padding,
+                        ));
                         row_height = row_height.max(size.height + padding);
                     } else {
-                        node.move_to(Point::new((column as f32) * column_width + offset, grid_height + spacing));
+                        node.move_to(Point::new(
+                            (column as f32) * column_width + offset,
+                            grid_height + spacing,
+                        ));
                         row_height = row_height.max(size.height + spacing);
                     }
                     nodes.push(node);
@@ -186,11 +206,14 @@ where
                 let grid_width = (columns as f32) * column_width;
 
                 if padding != 0. {
-                    Node::with_children(Size::new(grid_width + padding, grid_height + padding), nodes)
+                    Node::with_children(
+                        Size::new(grid_width + padding, grid_height + padding),
+                        nodes,
+                    )
                 } else {
                     Node::with_children(Size::new(grid_width, grid_height + padding), nodes)
                 }
-                
+
             // if we didn't define `columns` and `column_width` just put them
             // horizontally next to each other
             } else {
@@ -215,7 +238,14 @@ where
         cursor_position: Point,
         viewport: &Rectangle,
     ) -> Renderer::Output {
-        self::Renderer::draw(renderer, defaults, layout, cursor_position, viewport, &self.children)
+        self::Renderer::draw(
+            renderer,
+            defaults,
+            layout,
+            cursor_position,
+            viewport,
+            &self.children,
+        )
     }
 
     fn hash_layout(&self, state: &mut Hasher) {
@@ -238,11 +268,12 @@ where
         messages: &mut Vec<Message>,
         renderer: &Renderer,
         clipboard: Option<&dyn Clipboard>,
-    ) {
+    ) -> event::Status {
+        let event_status = event::Status::Ignored;
         self.children
             .iter_mut()
             .zip(layout.children())
-            .for_each(|(child, layout)| {
+            .map(|(child, layout)| {
                 child.on_event(
                     event.clone(),
                     layout,
@@ -251,16 +282,17 @@ where
                     renderer,
                     clipboard,
                 )
-            });
+            })
+            .fold(event_status, event::Status::merge)
     }
 
-    // fn overlay(&mut self, layout: Layout<'_>) -> Option<overlay::Element<'_, Message, Renderer>> {
-    //     self.children
-    //         .iter_mut()
-    //         .zip(layout.children())
-    //         .filter_map(|(child, layout)| child.overlay(layout))
-    //         .next()
-    // }
+    fn overlay(&mut self, layout: Layout<'_>) -> Option<overlay::Element<'_, Message, Renderer>> {
+        self.children
+            .iter_mut()
+            .zip(layout.children())
+            .filter_map(|(child, layout)| child.overlay(layout))
+            .next()
+    }
 }
 
 pub trait Renderer: iced_native::Renderer + container::Renderer + Sized {
@@ -316,8 +348,7 @@ where
     }
 }
 
-impl<'a, Message, Renderer> From<Grid<'a, Message, Renderer>> 
-    for Element<'a, Message, Renderer>
+impl<'a, Message, Renderer> From<Grid<'a, Message, Renderer>> for Element<'a, Message, Renderer>
 where
     Renderer: 'a + self::Renderer,
     Message: 'a,

@@ -1,4 +1,7 @@
-use iced_graphics::{backend::{self, Backend}, Primitive};
+use iced_graphics::{
+    backend::{self, Backend},
+    Primitive,
+};
 use iced_native::{
     layout::{Limits, Node},
     mouse, Element, Hasher, Layout, Length, Point, Rectangle, Size, Widget,
@@ -10,10 +13,7 @@ pub enum Overflow {
 }
 
 impl Overflow {
-    pub const ALL: [Overflow; 2] = [
-        Overflow::Visible,
-        Overflow::Clip
-    ];
+    pub const ALL: [Overflow; 2] = [Overflow::Visible, Overflow::Clip];
 }
 
 impl Default for Overflow {
@@ -74,21 +74,20 @@ where
             let mut width: f32 = 0.;
 
             for (element, point) in self.children.iter() {
-                let size = element.layout(renderer, &limits).size();
-                let mut node = Node::new(size);
+                let mut node = element.layout(renderer, &limits);
+                let size = node.size();
                 if let Some(point) = point {
                     node.move_to(*point);
                     match self.overflow {
                         Overflow::Visible => {
                             width = width.max(size.width + point.x);
                             height = height.max(size.height + point.y);
-                        },
+                        }
                         Overflow::Clip => {
                             height = height.max(size.height);
                             width = width.max(size.width);
                         }
                     }
-                    
                 } else {
                     height = height.max(size.height);
                     width = width.max(size.width);

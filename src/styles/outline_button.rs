@@ -1,10 +1,10 @@
-use iced_native::{Color};
+use iced_native::Color;
 
 pub struct Style {
-   pub border_radius: u16,
-   pub border_width: u16,
-   pub border_color: Color,
-   pub text_color: Color,
+    pub border_radius: u16,
+    pub border_width: u16,
+    pub border_color: Color,
+    pub text_color: Color,
 }
 
 impl std::default::Default for Style {

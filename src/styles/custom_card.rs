@@ -1,5 +1,5 @@
+use super::card::{Style, StyleSheet};
 use iced::{Background, Color};
-use super::card::{StyleSheet, Style};
 
 pub enum CustomCard {
     Default,

@@ -1,10 +1,9 @@
 use crate::components::card::{self, Card};
 use crate::styles::custom_card::CustomCard;
 use iced::{
-    pick_list, Align, Column, Container, Element, Length, PickList, Sandbox, Settings, Text, window, 
+    pick_list, window, Align, Column, Container, Element, Length, PickList, Sandbox, Settings, Text,
 };
 use std::fmt::{Display, Formatter, Result};
-use crate::components::stepper::{self, Stepper};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum Language {
@@ -54,26 +53,21 @@ impl Display for Language {
 }
 
 #[derive(Default)]
-pub struct CardTest {
-    pub card_state: card::State,
-    pub pick_list: pick_list::State<Language>,
-    pub selected_language: Language,
-    pub current_rate: f32,
-    pub decrease_btn_state: stepper::State,
-    pub increase_btn_state: stepper::State,
+pub struct CardDemo {
+    card_state: card::State,
+    pick_list: pick_list::State<Language>,
+    selected_language: Language,
 }
 
 #[derive(Debug, Clone)]
 pub enum CardMessage {
     OnCardPressed,
     LanguageChanged(Language),
-    CurrentRateChanged(f32)
 }
 
-impl CardTest {
-    pub fn init() -> iced::Result {
+impl CardDemo {
+    pub fn init() {
         let setting = Settings {
-            default_font: Some(include_bytes!("../../fonts/ProductSans-Regular.ttf")),
             default_text_size: 13,
             antialiasing: true,
             window: window::Settings {
@@ -86,11 +80,11 @@ impl CardTest {
             ..Settings::default()
         };
 
-        CardTest::run(setting)
+        CardDemo::run(setting).unwrap();
     }
 }
 
-impl Sandbox for CardTest {
+impl Sandbox for CardDemo {
     type Message = CardMessage;
 
     fn new() -> Self {
@@ -108,9 +102,6 @@ impl Sandbox for CardTest {
             }
             Self::Message::LanguageChanged(language) => {
                 self.selected_language = language;
-            },
-            Self::Message::CurrentRateChanged(current_value) => {
-                self.current_rate = current_value;
             }
         }
     }
@@ -130,7 +121,6 @@ impl Sandbox for CardTest {
             .push(Text::new("Which is your favorite language?"))
             .push(pick_list);
         let footer = Text::new("Footer section");
-
         let card = Card::new(&mut self.card_state)
             .header(header)
             .body(body)
@@ -139,13 +129,7 @@ impl Sandbox for CardTest {
             .padding(10)
             .on_pressed(Self::Message::OnCardPressed)
             .style(CustomCard::Default);
-
-        let stepper = Stepper::new(self.current_rate, &mut self.decrease_btn_state, &mut self.increase_btn_state, Self::Message::CurrentRateChanged).step(2.);
-        let column = Column::new()
-            .push(card)
-            .push(stepper);
-
-        Container::new(column)
+        Container::new(card)
             .width(Length::Fill)
             .height(Length::Fill)
             .center_x()

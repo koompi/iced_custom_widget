@@ -1,6 +1,11 @@
 pub mod card;
 pub mod grid;
 pub mod icon;
-pub mod stack;
 pub mod outline_button;
+pub mod stack;
 pub mod stepper;
+pub mod table;
+pub mod table_cell;
+pub mod table_column;
+pub mod table_header;
+pub mod table_row;

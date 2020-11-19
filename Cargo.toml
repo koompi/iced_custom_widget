@@ -1,5 +1,5 @@
 [package]
-name = "hello-world"
+name = "iced_custom_widget_catalog"
 version = "0.1.0"
 authors = ["leang27 <52003343+leang27@users.noreply.github.com>"]
 edition = "2018"
@@ -14,3 +14,10 @@ iced_native = {git = "https://github.com/hecrj/iced.git"}
 iced_wgpu = {git = "https://github.com/hecrj/iced.git"}
 iced_graphics = {git = "https://github.com/hecrj/iced.git"}
 iced_style = {git = "https://github.com/hecrj/iced.git"}
+
+# Core dependencies
+strum = "0.15"
+strum_macros = "0.15"
+serde = { version = "1.0.117", features=['derive'] }
+serde_yaml = "0.8.14"
+# nfd = "0.0.4"
