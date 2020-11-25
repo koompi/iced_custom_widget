@@ -75,11 +75,11 @@ where
     }
 
     fn height(&self) -> Length {
-        self.state.height
+        Length::Shrink
     }
 
     fn layout(&self, renderer: &Renderer, limits: &Limits) -> Node {
-        let limits = limits.width(self.state.width).height(self.state.height);
+        let limits = limits.width(self.state.width).height(self.height());
         Row::<(), Renderer>::new()
             .padding(self.padding)
             .push(Text::new(&self.state.key.title()).width(Length::Fill))
@@ -125,7 +125,6 @@ where
         struct Marker;
         std::any::TypeId::of::<Marker>().hash(state);
         self.state.width.hash(state);
-        self.state.height.hash(state);
         self.state.key.hash(state);
         self.padding.hash(state);
     }
@@ -173,7 +172,6 @@ where
     pub key: Key,
     pub is_pressed: bool,
     pub width: Length,
-    pub height: Length,
 }
 
 impl<Key> Default for State<Key>
@@ -185,7 +183,6 @@ where
             key: Default::default(),
             is_pressed: false,
             width: Length::Shrink,
-            height: Length::Shrink,
         }
     }
 }

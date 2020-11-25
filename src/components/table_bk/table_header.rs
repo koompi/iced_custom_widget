@@ -1,37 +1,34 @@
-use crate::components::table_column::{self, ColumnKey, TableColumn};
+use super::table_column::{self, ColumnKey, TableColumn};
 use iced_graphics::{Backend, Primitive};
 use iced_native::{
-    event::{self, Event},
-    layout::{self, Limits, Node},
-    mouse, text, Align, Clipboard, Element, Hasher, Layout, Length, Point, Rectangle, Widget,
+    layout::{self, Limits, Node}, event::{self, Event}, mouse, text, 
+    Align, Element, Hasher, Layout, Length, Point, Rectangle, Widget, Clipboard,
 };
 
-pub struct TableHeader<'a, Message, Renderer, Key>
-where
-    Key: ColumnKey,
-    Renderer: self::Renderer,
+pub struct TableHeader<'a, Message, Renderer: self::Renderer>
 {
-    state: &'a mut State<Key>,
+    state: &'a mut State,
     width: Length,
     height: Length,
     spacing: u16,
     leeway: u16,
-    children: Vec<Element<'a, Message, Renderer>>,
+    columns: Vec<Element<'a, Message, Renderer>>,
+    names: Vec<String>,
     on_resize: Option<(u16, Box<dyn Fn(ResizeEvent) -> Message + 'a>)>,
 }
 
-impl<'a, Message, Renderer, Key> TableHeader<'a, Message, Renderer, Key>
+impl<'a, Message, Renderer> TableHeader<'a, Message, Renderer>
 where
-    Key: ColumnKey,
     Renderer: 'a + self::Renderer + text::Renderer,
     Message: 'a + Clone,
 {
-    pub fn new(state: &'a mut State<Key>) -> Self {
-        let children = vec![];
-
-        // for column in state.columns.iter_mut() {
-        //     children.push(TableColumn::new(column).into());
-        // }
+    pub fn new<Key: ColumnKey>(state: &'a mut State, children: Vec<(String, TableColumn<'a, Message, Renderer, Key>)>) -> Self {
+        let mut columns = Vec::with_capacity(children.len());
+        let mut names = Vec::with_capacity(children.len());
+        for (name,column) in children {
+            names.push(name);
+            columns.push(column.into());
+        }
 
         Self {
             state,
@@ -39,8 +36,9 @@ where
             width: Length::Shrink,
             height: Length::Shrink,
             leeway: 0,
-            children,
-            on_resize: None,
+            columns,
+            names,
+            on_resize: None
         }
     }
 
@@ -67,36 +65,11 @@ where
         self.on_resize = Some((leeway, Box::new(f)));
         self
     }
-
-    fn trigger_resize(
-        &self,
-        left_name: String,
-        left_width: u16,
-        right_name: String,
-        right_width: u16,
-        messages: &mut Vec<Message>,
-    ) {
-        if let Some((_, on_column_resize)) = &self.on_resize {
-            messages.push(on_column_resize(ResizeEvent::ResizeColumn {
-                left_name,
-                left_width,
-                right_name,
-                right_width,
-            }));
-        }
-    }
-
-    fn trigger_finished(&self, messages: &mut Vec<Message>) {
-        if let Some((_, on_column_resize)) = &self.on_resize {
-            messages.push(on_column_resize(ResizeEvent::Finished));
-        }
-    }
 }
 
-impl<'a, Message, Renderer, Key> Widget<Message, Renderer>
-    for TableHeader<'a, Message, Renderer, Key>
+impl<'a, Message, Renderer> Widget<Message, Renderer>
+    for TableHeader<'a, Message, Renderer>
 where
-    Key: ColumnKey,
     Renderer: 'a + self::Renderer + text::Renderer,
     Message: 'a + Clone,
 {
@@ -118,7 +91,7 @@ where
             0.0,
             self.spacing as f32,
             Align::Start,
-            &self.children,
+            &self.columns
         )
     }
 
@@ -133,11 +106,11 @@ where
         self::Renderer::draw(
             renderer,
             defaults,
-            &self.children,
+            &self.columns,
             layout,
             cursor_position,
             viewport,
-            self.state.internal.resize_hovering,
+            self.state.resize_hovering,
         )
     }
 
@@ -152,10 +125,11 @@ where
         self.spacing.hash(state);
         self.leeway.hash(state);
 
-        for child in &self.children {
+        for child in &self.columns {
             child.hash_layout(state);
         }
     }
+
 
     fn on_event(
         &mut self,
@@ -169,9 +143,9 @@ where
         let in_bounds = layout.bounds().contains(cursor_position);
         let mut event_status = event::Status::Ignored;
 
-        if self.state.internal.resizing || in_bounds {
+        if self.state.resizing || in_bounds {
             let dividers = self
-                .children
+                .columns
                 .iter()
                 .enumerate()
                 .zip(layout.children())
@@ -179,77 +153,74 @@ where
                     Some((idx, layout.position().x + layout.bounds().width))
                 })
                 .collect::<Vec<_>>();
-
             if self.on_resize.is_some() {
                 event_status = event::Status::Captured;
-                if !self.state.internal.resizing {
-                    self.state.internal.resize_hovering = false;
+                if !self.state.resizing {
+                    self.state.resize_hovering = false;
                 }
-
+    
                 for (idx, divider) in dividers.iter() {
                     if cursor_position.x > (divider - self.leeway as f32)
                         && cursor_position.x < (divider + self.leeway as f32)
                     {
-                        if !self.state.internal.resize_hovering {
-                            self.state.internal.resizing_idx = *idx;
+                        if !self.state.resize_hovering {
+                            self.state.resizing_idx = *idx;
                         }
-
-                        self.state.internal.resize_hovering = true;
+    
+                        self.state.resize_hovering = true;
                     }
                 }
             }
 
             match event {
                 Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
-                    if self.state.internal.resize_hovering {
-                        self.state.internal.resizing = true;
-                        self.state.internal.starting_cursor_pos = Some(cursor_position);
-                        self.state.internal.starting_left_width = layout
+                    if self.state.resize_hovering {
+                        self.state.resizing = true;
+                        self.state.starting_cursor_pos = Some(cursor_position);
+                        self.state.starting_left_width = layout
                             .children()
-                            .nth(self.state.internal.resizing_idx)
+                            .nth(self.state.resizing_idx)
                             .unwrap()
                             .bounds()
                             .width;
-                        self.state.internal.starting_right_width = layout
+                        self.state.starting_right_width = layout
                             .children()
-                            .nth(self.state.internal.resizing_idx + 1)
+                            .nth(self.state.resizing_idx + 1)
                             .unwrap()
                             .bounds()
                             .width;
                     }
                 }
                 Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
-                    if self.state.internal.resizing {
-                        self.state.internal.resizing = false;
-                        self.state.internal.starting_cursor_pos.take();
-                        self.trigger_finished(messages);
+                    if self.state.resizing {
+                        self.state.resizing = false;
+                        self.state.starting_cursor_pos.take();
+                        if let Some((_, on_resize)) = &self.on_resize {
+                            messages.push(on_resize(ResizeEvent::Finished));
+                        }
                     }
                 }
                 Event::Mouse(mouse::Event::CursorMoved { x, .. }) => {
-                    if self.state.internal.resizing {
-                        let delta = x - self.state.internal.starting_cursor_pos.unwrap().x;
+                    if self.state.resizing {
+                        let delta = x - self.state.starting_cursor_pos.unwrap().x;
 
-                        let left_width = self.state.internal.starting_left_width;
-                        let right_width = self.state.internal.starting_right_width;
+                        let left_width = self.state.starting_left_width;
+                        let right_width = self.state.starting_right_width;
 
                         let max_width = left_width + right_width - 30.0;
 
                         let left_width = (left_width + delta).max(30.0).min(max_width) as u16;
-                        let left_name = &self.state.columns[self.state.internal.resizing_idx]
-                            .key
-                            .as_string();
+                        let left_name = self.names[self.state.resizing_idx].as_str();
                         let right_width = (right_width - delta).max(30.0).min(max_width) as u16;
-                        let right_name = &self.state.columns[self.state.internal.resizing_idx]
-                            .key
-                            .as_string();
-
-                        self.trigger_resize(
-                            left_name.clone(),
-                            left_width,
-                            right_name.clone(),
-                            right_width,
-                            messages,
-                        );
+                        let right_name = self.names[self.state.resizing_idx].as_str();
+                        if let Some((_, on_resize)) = &self.on_resize {
+                            messages.push(on_resize(ResizeEvent::ResizeColumn {
+                                left_name: String::from(left_name),
+                                left_width,
+                                right_name: String::from(right_name),
+                                right_width,
+                            }));
+                        }
                     }
                 }
                 _ => {
@@ -257,10 +228,10 @@ where
                 }
             }
         } else {
-            self.state.internal.resize_hovering = false;
+            self.state.resize_hovering = false;
         }
 
-        self.children
+        self.columns
             .iter_mut()
             .zip(layout.children())
             .map(|(child, layout)| {
@@ -278,37 +249,14 @@ where
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct State<Key: ColumnKey> {
-    pub internal: InternalState,
-    pub previous_column_key: Option<Key>,
-    pub previous_sort_direction: Option<SortDirection>,
-    pub columns: Vec<table_column::State<Key>>,
+pub struct State {
+    pub resize_hovering: bool,
+    pub resizing: bool,
+    pub resizing_idx: usize,
+    pub starting_cursor_pos: Option<Point>,
+    pub starting_left_width: f32,
+    pub starting_right_width: f32,
 }
-
-#[derive(Debug, Default, Clone)]
-pub struct InternalState {
-    resize_hovering: bool,
-    resizing: bool,
-    resizing_idx: usize,
-    starting_cursor_pos: Option<Point>,
-    starting_left_width: f32,
-    starting_right_width: f32,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum SortDirection {
-    Asc,
-    Desc,
-}
-
-// impl SortDirection {
-//     fn toggle(self) -> Self {
-//         match self {
-//             Self::Asc => Self::Desc,
-//             Self::Desc => Self::Asc,
-//         }
-//     }
-// }
 
 #[derive(Debug, Clone)]
 pub enum ResizeEvent {
@@ -374,14 +322,13 @@ where
     }
 }
 
-impl<'a, Message, Renderer, Key> From<TableHeader<'a, Message, Renderer, Key>>
+impl<'a, Message, Renderer> From<TableHeader<'a, Message, Renderer>>
     for Element<'a, Message, Renderer>
 where
-    Key: 'a + ColumnKey,
     Renderer: 'a + self::Renderer + text::Renderer,
     Message: 'a + Clone,
 {
-    fn from(header: TableHeader<'a, Message, Renderer, Key>) -> Element<'a, Message, Renderer> {
+    fn from(header: TableHeader<'a, Message, Renderer>) -> Element<'a, Message, Renderer> {
         Element::new(header)
     }
 }

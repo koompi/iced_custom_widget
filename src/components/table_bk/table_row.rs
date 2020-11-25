@@ -1,4 +1,4 @@
-use crate::components::table_cell::{self, TableCell};
+use super::table_cell::{self, TableCell};
 use crate::styles::table_row::StyleSheet;
 use iced_graphics::{Backend, Primitive};
 use iced_native::{
@@ -29,6 +29,7 @@ where
 
     pub fn cells(has_background: bool, cells: Vec<TableCell<'a, Message, Renderer>>) -> Self {
         let cells: Vec<Element<_, _>> = cells.into_iter().map(|cell| cell.into()).collect();
+        
         Self {
             cells,
             width: Length::Shrink,
