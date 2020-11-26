@@ -1,13 +1,13 @@
 #[derive(Clone, PartialEq, Default, Debug)]
 pub struct TableColumn {
    pub name: String,
+   pub label: Option<String>,
    pub short_name: Option<String>,
-   pub data_prop: Option<String>,
 }
 
 impl std::fmt::Display for TableColumn {
    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-      write!(f, "{}", self.data_prop.as_ref().unwrap_or(&self.name))
+      write!(f, "{}", self.label.as_ref().unwrap_or(&self.name))
    }
 }
 
@@ -18,7 +18,7 @@ pub struct TableOptions {
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum TableOrder {
-   Unordered = 0,
+   Unordered,
    Ascending,
    Descending,
 }

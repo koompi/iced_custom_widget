@@ -94,7 +94,7 @@ impl Sandbox for TableDemo {
 
    fn view(&mut self) -> Element<'_, Self::Message> {
       let columns = table_columns![
-         ("id", "Id."),
+         ("id", "ID"),
          ("description", "Description"),
          ("progress", "Progress"),
          ("responsible_user", "User"),

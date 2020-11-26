@@ -15,8 +15,8 @@ impl std::default::Default for Style {
    fn default() -> Self {
       Self {
          text_color: Color::BLACK,
-         background: Background::Color(Color::from_rgb8(245, 245, 245)),
-         header_background: Background::Color(Color::TRANSPARENT),
+         background: Background::Color(Color::TRANSPARENT),
+         header_background: Background::Color(Color::from_rgba8(238, 238, 238, 0.5)),
          border_radius: 4.0,
          border_width: 1.0,
          border_color: Color::BLACK,
@@ -32,7 +32,12 @@ pub trait StyleSheet {
       let active = self.active();
 
       Style {
-         header_background: Background::Color(Color::from_rgba8(52, 152, 219, 0.5)),
+         header_background: match active.header_background {
+            Background::Color(color) => Background::Color(Color {
+               a: 1.0,
+               ..color
+            })
+         },
          ..active
       }
    }

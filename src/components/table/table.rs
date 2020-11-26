@@ -5,9 +5,8 @@ use super::{
 use crate::styles::table::StyleSheet;
 use iced_graphics::{backend, Backend, Primitive};
 use iced_native::{
-   event::{self, Event},
-   layout::{Limits, Node},
-   mouse, text, Color, Element, Hasher, HorizontalAlignment, Layout, Length, Point, Rectangle, Size, VerticalAlignment,
+   event::{self, Event}, layout::{Limits, Node}, mouse, text, row, column,
+   Color, Element, Hasher, HorizontalAlignment, Layout, Length, Point, Rectangle, Size, VerticalAlignment,
    Widget,
 };
 use serde::Serialize;
@@ -32,6 +31,7 @@ where
    data: &'a mut Vec<T>,
    selected_row: Option<T>,
    padding: u16,
+   // column_max_width: f32,
    option: Option<TableOptions>,
    text_size: Option<u16>,
    font: Renderer::Font,
@@ -93,7 +93,7 @@ where
       }
    }
 
-   fn trigger_sort_column(&mut self, idx: usize) -> bool {
+   fn trigger_sort_column(&mut self, idx: usize) {
       use TableOrder::*;
 
       for (i, x) in self.state.orders.iter_mut().enumerate() {
@@ -103,19 +103,13 @@ where
             *x = x.toggle()
          }
       }
-
-      match self.columns[idx].data_prop.as_ref() {
-         Some(f) => {
-            match self.state.orders[idx] {
-               Unordered => self.data.sort(),
-               Ascending => self.data.sort_by_cached_key(|x| x.get_field_value(&f).unwrap()),
-               Descending => self
-                  .data
-                  .sort_by_cached_key(|x| std::cmp::Reverse(x.get_field_value(&f).unwrap())),
-            }
-            true
-         }
-         None => false,
+      let name = &self.columns[idx].name;
+      match self.state.orders[idx] {
+         Unordered => self.data.sort(),
+         Ascending => self.data.sort_by_cached_key(|x| x.get_field_value(name.as_ref()).unwrap()),
+         Descending => self
+            .data
+            .sort_by_cached_key(|x| std::cmp::Reverse(x.get_field_value(name.as_ref()).unwrap())),
       }
    }
 }
@@ -136,14 +130,15 @@ where
    fn layout(&self, renderer: &Renderer, limits: &Limits) -> Node {
       let padding = f32::from(self.padding);
       let limits = limits.width(Length::Shrink).height(Length::Shrink);
+      let bounds = limits.resolve(Size::INFINITY);
       let text_size = self.text_size.unwrap_or(renderer.default_size());
 
       let mut header_nodes = Vec::new();
       let mut header_size = Size::ZERO;
       for column in &self.columns {
-         let (width, height) = renderer.measure(&column.to_string(), text_size, self.font, Size::new(f32::MAX, f32::MAX));
+         let (width, height) = renderer.measure(&column.to_string(), text_size, self.font, bounds);
          let size = {
-            let intrinsic = Size::new(width + f32::from(text_size) + padding, height);
+            let intrinsic = Size::new(width+f32::from(text_size)+padding, height+padding);
             limits.resolve(intrinsic)
          };
          let mut node = Node::new(size);
@@ -152,44 +147,41 @@ where
          header_size.width += size.width;
          header_size.height = header_size.height.max(size.height);
       }
-      let header = Node::with_children(header_size, header_nodes);
-      // println!("{:#?}", header);
+      let mut header = Node::with_children(header_size, header_nodes);
+      header.move_to(Point::new(1.0, 1.0));
 
       let mut body_nodes = Vec::new();
-      let mut body_size = Size::new(0.0, header_size.height);
+      let mut table_size = Size::new(0.0, header_size.height);
       self.data.iter().for_each(|record| {
          let mut record_nodes = Vec::new();
          let mut record_size = Size::ZERO;
-         for value in self
+         self
             .columns
             .iter()
-            .map(|c| c.data_prop.as_ref().unwrap_or(&c.name))
+            .map(|c| c.name.as_str())
             .map(|name| record.get_field_value(name))
             .filter_map(|h| h.ok())
-         {
-            let (width, height) = renderer.measure("&value", text_size, self.font, Size::new(f32::MAX, f32::MAX));
-            let size = {
-               let intrinsic = Size::new(width + f32::from(text_size) + padding, height);
-               limits.resolve(intrinsic)
-            };
-            let mut node = Node::new(size);
-            node.move_to(Point::new(record_size.width, body_size.height));
-            record_nodes.push(node);
-            record_size.width += size.width;
-            record_size.height = record_size.height.max(size.height);
-         }
-         let mut record = Node::with_children(record_size, record_nodes);
-         record.move_to(Point::new(0.0, body_size.height));
+            .for_each(|value| {
+               let (width, height) = renderer.measure("&value", text_size, self.font, bounds);
+               let size = {
+                  let intrinsic = Size::new(width+f32::from(text_size)+padding, height+padding);
+                  limits.resolve(intrinsic)
+               };
+               let mut cell = Node::new(size);
+               cell.move_to(Point::new(record_size.width, table_size.height));
+               record_nodes.push(cell);
+               record_size.width += size.width;
+               record_size.height = record_size.height.max(size.height);
+            });
+         let record = Node::with_children(record_size, record_nodes);
          body_nodes.push(record);
-         body_size.width = body_size.width.max(record_size.width);
-         body_size.height += record_size.height;
+         table_size.width = table_size.width.max(record_size.width);
+         table_size.height += record_size.height;
       });
-      let mut body = Node::with_children(body_size, body_nodes);
-      body.move_to(Point::new(0.0, header_size.height));
-      // println!("{:#?}", body);
-      let max_width = header_size.width.max(body_size.width);
-      let max_height = header_size.height + body_size.height;
-      Node::with_children(Size::new(max_width, max_height), vec![header, body])
+      let body = Node::with_children(table_size, body_nodes);
+
+      table_size.width = header_size.width.max(table_size.width)+2.0;
+      Node::with_children(table_size, vec![header, body])
    }
 
    fn draw(
@@ -223,10 +215,10 @@ where
          .columns
          .iter()
          .map(ToString::to_string)
-         .zip(self.data.clone())
-         .for_each(|(column, record)| {
+         // .zip(self.data.clone())
+         .for_each(|column| {
             column.hash(state);
-            record.get_field_value(&column).unwrap().hash(state);
+            // record.get_field_value(&column).unwrap().hash(state);
          });
    }
 }
@@ -301,11 +293,12 @@ where
       let header_section = Primitive::Group {
          primitives: columns
             .iter()
+            .map(ToString::to_string)
             .zip(header_layout.children())
-            .map(|(column, layout)| {
+            .map(|(content, layout)| {
                let bounds = layout.bounds();
                Primitive::Text {
-                  content: column.to_string(),
+                  content,
                   size: f32::from(text_size),
                   font,
                   color: styling.text_color,
@@ -321,43 +314,40 @@ where
             .collect(),
       };
 
-      let mut body_records = Vec::new();
+      let mut body_records = Vec::with_capacity(data.len());
       for (record, record_layout) in data.iter().zip(body_layout.children()) {
-         let mut record_cells = Vec::new();
-         for (value, cell_layout) in columns
+         let record_cells = columns
             .iter()
-            .map(|c| c.data_prop.as_ref().unwrap_or(&c.name))
+            .map(|c| c.name.as_str())
             .map(|name| record.get_field_value(name))
             .filter_map(|h| h.ok())
             .zip(record_layout.children())
-         {
-            let bounds = cell_layout.bounds();
-            record_cells.push(Primitive::Text {
-               content: "value.to_string()".to_string(),
-               size: f32::from(text_size),
-               font,
-               color: styling.text_color,
-               bounds: Rectangle {
-                  x: bounds.x + f32::from(padding),
-                  y: bounds.center_y(),
-                  ..bounds
-               },
-               horizontal_alignment: HorizontalAlignment::Left,
-               vertical_alignment: VerticalAlignment::Center,
+            .fold(Vec::with_capacity(columns.len()), |mut record_cells, (value, cell_layout)| {
+               let bounds = cell_layout.bounds();
+               record_cells.push(
+                  Primitive::Text {
+                     content: "value.to_string()".to_string(),
+                     size: f32::from(text_size),
+                     font,
+                     color: styling.text_color,
+                     bounds: Rectangle {
+                        x: bounds.x + f32::from(padding),
+                        y: bounds.center_y(),
+                        ..bounds
+                     },
+                     horizontal_alignment: HorizontalAlignment::Left,
+                     vertical_alignment: VerticalAlignment::Center,
+                  }
+               );
+               println!("draw a cell");
+               record_cells
             });
-         }
-         body_records.push(Primitive::Group {
-            primitives: record_cells,
-         });
+         body_records.push(Primitive::Group{ primitives: record_cells });
       }
-      let body_section = Primitive::Group {
-         primitives: body_records,
-      };
-
+      let body_section = Primitive::Group{ primitives: body_records };
+      println!("{:#?}", body_section);
       (
-         Primitive::Group {
-            primitives: vec![background, header_background, body_section, header_section],
-         },
+         Primitive::Group{ primitives: vec![background, header_background, body_section, header_section] },
          if header_mouse_over {
             mouse::Interaction::Pointer
          } else {

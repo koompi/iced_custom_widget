@@ -78,7 +78,7 @@ impl Theme {
          palette: ColorPalette {
             base: BaseColors {
                background: hex_to_color("#FFFFFF").unwrap(),
-               foreground: hex_to_color("#F5F5F5").unwrap(),
+               foreground: hex_to_color("#EEEEEE").unwrap(),
             },
             normal: NormalColors {
                primary: hex_to_color("#3498DB").unwrap(),
