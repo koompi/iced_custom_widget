@@ -1,17 +1,11 @@
-use iced_graphics::{Backend, Defaults, Primitive};
+use iced_graphics::Primitive;
 use iced_native::{
-   container,
-   event::{self, Event},
-   layout::{
-      flex::{self, Axis},
-      Limits, Node,
-   },
-   mouse, overlay, Align, Clipboard, Element, Hasher, Layout, Length, Point, Rectangle, Size, Widget,
+   container, event::{self, Event}, layout::{flex::{self, Axis}, Limits, Node}, mouse, overlay, 
+   Align, Clipboard, Element, Hasher, Layout, Length, Point, Rectangle, Size, Widget,
 };
 
 /// A container that produces a grid layout.
 /// A scrollable, 2D array of widgets.
-
 pub struct Grid<'a, Message, Renderer> {
    width: Length,
    height: Length,
@@ -104,10 +98,7 @@ where
          let padding = f32::from(self.padding);
          let spacing = f32::from(self.spacing);
          let limits = limits.width(self.width).height(self.height);
-         // if we have a given number of columns, we can find out how
-         // wide a column is by finding the widest cell in it
          if let Some(columns) = self.columns {
-            // store width of each column
             let mut column_widths = Vec::<f32>::with_capacity(columns);
 
             for (column, element) in (0..columns).cycle().zip(&self.children) {
@@ -118,7 +109,6 @@ where
                }
             }
 
-            // list of x alignments for every column
             let column_aligns = std::iter::once(&0.)
                .chain(column_widths.iter().take(column_widths.len() - 1))
                .scan(0., |state, width| {
@@ -157,8 +147,6 @@ where
                ),
                nodes,
             )
-         // if we have `column_width` but no `columns`, calculate number of
-         // columns by checking how many can fit
          } else if let Some(column_width) = self.column_width {
             let column_width = f32::from(column_width);
             let max_width = limits.max().width;
@@ -196,9 +184,6 @@ where
             } else {
                Node::with_children(Size::new(grid_width, grid_height + padding), nodes)
             }
-
-         // if we didn't define `columns` and `column_width` just put them
-         // horizontally next to each other
          } else {
             flex::resolve(Axis::Horizontal, renderer, &limits, padding, 8., Align::Start, &self.children)
          }
@@ -270,16 +255,14 @@ pub trait Renderer: iced_native::Renderer + container::Renderer + Sized {
    ) -> Self::Output;
 }
 
-impl<B> Renderer for iced_graphics::Renderer<B>
-where
-   B: Backend,
+impl Renderer for iced_wgpu::Renderer
 {
    const DEFAULT_PADDING: u16 = 0;
    const DEFAULT_SPACING: u16 = 8;
 
    fn draw<Message>(
       &mut self,
-      defaults: &Defaults,
+      defaults: &Self::Defaults,
       layout: Layout<'_>,
       cursor_position: Point,
       viewport: &Rectangle,

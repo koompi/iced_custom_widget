@@ -1,25 +1,19 @@
-use iced_graphics::{
-   backend::{self, Backend},
-   Primitive,
-};
+use iced_graphics::Primitive;
 use iced_native::{
    layout::{Limits, Node},
    mouse, Element, Hasher, Layout, Length, Point, Rectangle, Size, Widget,
 };
+use smart_default::SmartDefault;
 
+#[derive(SmartDefault)]
 pub enum Overflow {
+   #[default]
    Visible,
    Clip,
 }
 
 impl Overflow {
    pub const ALL: [Overflow; 2] = [Overflow::Visible, Overflow::Clip];
-}
-
-impl Default for Overflow {
-   fn default() -> Self {
-      Overflow::Visible
-   }
 }
 
 pub struct Stack<'a, Message, Renderer> {
@@ -129,9 +123,7 @@ pub trait Renderer: iced_native::Renderer {
    ) -> Self::Output;
 }
 
-impl<B> Renderer for iced_graphics::Renderer<B>
-where
-   B: Backend + backend::Text,
+impl Renderer for iced_wgpu::Renderer
 {
    fn draw<Message>(
       &mut self,

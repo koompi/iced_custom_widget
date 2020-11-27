@@ -1,5 +1,5 @@
 use crate::styles::stepper::StyleSheet;
-use iced_graphics::{backend, Backend, Primitive};
+use iced_graphics::Primitive;
 use iced_native::{
    button, container,
    event::{self, Event},
@@ -283,9 +283,7 @@ pub trait Renderer: iced_native::Renderer + text::Renderer {
    ) -> Self::Output;
 }
 
-impl<B> Renderer for iced_graphics::Renderer<B>
-where
-   B: Backend + backend::Text,
+impl Renderer for iced_wgpu::Renderer
 {
    type Style = Box<dyn StyleSheet>;
    const DEFAULT_PADDING: u16 = 8;

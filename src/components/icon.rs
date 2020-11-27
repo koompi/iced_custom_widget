@@ -1,8 +1,7 @@
 use iced_graphics::{backend, Backend, Primitive};
 use iced_native::{
-   layout::{Limits, Node},
-   mouse, Color, Element, Font, Hasher, HorizontalAlignment, Layout, Length, Point, Rectangle, Size, VerticalAlignment,
-   Widget,
+   layout::{Limits, Node}, mouse, Color, Element, Font, Hasher, HorizontalAlignment, 
+   Layout, Length, Point, Rectangle, Size, VerticalAlignment, Widget,
 };
 
 pub struct Icon {

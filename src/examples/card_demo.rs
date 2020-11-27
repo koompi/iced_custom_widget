@@ -2,9 +2,11 @@ use crate::components::card::{self, Card};
 use crate::styles::custom_card::CustomCard;
 use iced::{pick_list, window, Align, Column, Container, Element, Length, PickList, Sandbox, Settings, Text};
 use std::fmt::{Display, Formatter, Result};
+use smart_default::SmartDefault;
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, SmartDefault)]
 pub enum Language {
+   #[default]
    Rust,
    Elm,
    Ruby,
@@ -24,12 +26,6 @@ impl Language {
       Language::Ruby,
       Language::Rust,
    ];
-}
-
-impl Default for Language {
-   fn default() -> Self {
-      Self::Rust
-   }
 }
 
 impl Display for Language {

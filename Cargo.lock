@@ -962,7 +962,7 @@ dependencies = [
  "glyph_brush_draw_cache",
  "glyph_brush_layout",
  "log",
- "ordered-float 1.1.0",
+ "ordered-float",
  "rustc-hash",
  "twox-hash",
 ]
@@ -1013,8 +1013,9 @@ dependencies = [
 
 [[package]]
 name = "iced"
-version = "0.1.1"
-source = "git+https://github.com/hecrj/iced.git#8f081bad7756e16a4eb0ca4dcb1144fc47de5e9b"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc8b909824aae021b8e6598ea3f021200d6bea10d27ae1b4202f678c68b0eed9"
 dependencies = [
  "iced_core",
  "iced_futures",
@@ -1026,30 +1027,30 @@ dependencies = [
 
 [[package]]
 name = "iced_core"
-version = "0.2.1"
-source = "git+https://github.com/hecrj/iced.git#8f081bad7756e16a4eb0ca4dcb1144fc47de5e9b"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1594f842b6d05b38a1432ed0b9fa8d237d6395a3b9d0fefcc28c61e57eba3a5"
 
 [[package]]
 name = "iced_custom_widget"
 version = "0.1.0"
 dependencies = [
  "iced",
- "iced_futures",
  "iced_graphics",
  "iced_native",
- "iced_style",
  "iced_wgpu",
- "iced_winit",
  "rand",
  "serde",
- "serde-value",
+ "serde_json",
  "serde_yaml",
+ "smart-default",
 ]
 
 [[package]]
 name = "iced_futures"
-version = "0.1.2"
-source = "git+https://github.com/hecrj/iced.git#8f081bad7756e16a4eb0ca4dcb1144fc47de5e9b"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f6310f02cfb482bb58a1ff6d000c654eff9975762a60f7fad8d821caf45562e"
 dependencies = [
  "futures",
  "log",
@@ -1059,7 +1060,8 @@ dependencies = [
 [[package]]
 name = "iced_graphics"
 version = "0.1.0"
-source = "git+https://github.com/hecrj/iced.git#8f081bad7756e16a4eb0ca4dcb1144fc47de5e9b"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7de74358f3c950421151765bcf04ce665af538e340e55aff78d2c88c343c7deb"
 dependencies = [
  "bytemuck",
  "font-kit",
@@ -1072,8 +1074,9 @@ dependencies = [
 
 [[package]]
 name = "iced_native"
-version = "0.2.2"
-source = "git+https://github.com/hecrj/iced.git#8f081bad7756e16a4eb0ca4dcb1144fc47de5e9b"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d608742afa42d27ce2ea34746d8694e0ad434b50cad7484008a9460b521853c"
 dependencies = [
  "iced_core",
  "iced_futures",
@@ -1084,16 +1087,18 @@ dependencies = [
 
 [[package]]
 name = "iced_style"
-version = "0.1.0"
-source = "git+https://github.com/hecrj/iced.git#8f081bad7756e16a4eb0ca4dcb1144fc47de5e9b"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0eb4fb0cc5d646b3f7a459aee712e99c847c5c9acd23130dcf250556d9b1d16"
 dependencies = [
  "iced_core",
 ]
 
 [[package]]
 name = "iced_web"
-version = "0.2.1"
-source = "git+https://github.com/hecrj/iced.git#8f081bad7756e16a4eb0ca4dcb1144fc47de5e9b"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c5310185411940a4f3edfd26ff1763fa5e517256a55a83eea28d7e4d19e9c27"
 dependencies = [
  "dodrio",
  "iced_core",
@@ -1108,8 +1113,9 @@ dependencies = [
 
 [[package]]
 name = "iced_wgpu"
-version = "0.2.2"
-source = "git+https://github.com/hecrj/iced.git#8f081bad7756e16a4eb0ca4dcb1144fc47de5e9b"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d148b650cb56cdbdd6dbdfd14fabc06e6f236232d59e8a776ca4e3e9cfdcc25"
 dependencies = [
  "bytemuck",
  "futures",
@@ -1125,8 +1131,9 @@ dependencies = [
 
 [[package]]
 name = "iced_winit"
-version = "0.1.1"
-source = "git+https://github.com/hecrj/iced.git#8f081bad7756e16a4eb0ca4dcb1144fc47de5e9b"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c99c7a351c32676ef2f46be25dcc490fcc6bd33a6847050534191d13b6b532f4"
 dependencies = [
  "iced_futures",
  "iced_graphics",
@@ -1178,6 +1185,12 @@ checksum = "b2b3ea6ff95e175473f8ffe6a7eb7c00d054240321b84c57051175fe3c1e075e"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "itoa"
+version = "0.4.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc6f3ad7b9d11a0c00842ff8de1b60ee58661048eb8049ed33c73594f359d7e6"
 
 [[package]]
 name = "jni-sys"
@@ -1562,15 +1575,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ordered-float"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9fe9037165d7023b1228bc4ae9a2fa1a2b0095eca6c2998c624723dfd01314a5"
-dependencies = [
- "num-traits",
-]
-
-[[package]]
 name = "owned_ttf_parser"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1858,6 +1862,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "ryu"
+version = "1.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
+
+[[package]]
 name = "same-file"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1903,16 +1913,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde-value"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3a1a3341211875ef120e117ea7fd5228530ae7e7036a779fdc9117be6b3282c"
-dependencies = [
- "ordered-float 2.0.0",
- "serde",
-]
-
-[[package]]
 name = "serde_derive"
 version = "1.0.117"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1921,6 +1921,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "serde_json"
+version = "1.0.59"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dcac07dbffa1c65e7f816ab9eba78eb142c6d44410f4eeba1e26e4f5dfa56b95"
+dependencies = [
+ "itoa",
+ "ryu",
+ "serde",
 ]
 
 [[package]]
@@ -1977,6 +1988,17 @@ name = "smallvec"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7acad6f34eb9e8a259d3283d1e8c1d34d7415943d4895f65cc73813c7396fc85"
+
+[[package]]
+name = "smart-default"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "133659a15339456eeeb07572eb02a91c91e9815e9cbc89566944d2c8d3efdbf6"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "smithay-client-toolkit"

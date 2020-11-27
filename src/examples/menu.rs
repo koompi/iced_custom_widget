@@ -25,7 +25,6 @@ pub struct ScaleState {
 impl Menu {
    pub fn init() {
       let settings = Settings {
-         default_font: Some(include_bytes!("../../fonts/ProductSans-Regular.ttf")),
          default_text_size: 13,
          antialiasing: true,
          window: window::Settings {

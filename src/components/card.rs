@@ -1,5 +1,5 @@
 use crate::styles::card::StyleSheet;
-use iced_graphics::{backend, Backend, Defaults, Primitive};
+use iced_graphics::Primitive;
 use iced_native::{
    event,
    layout::{
@@ -256,9 +256,7 @@ pub trait Renderer: iced_native::Renderer {
    ) -> Self::Output;
 }
 
-impl<B> Renderer for iced_graphics::Renderer<B>
-where
-   B: Backend + backend::Text,
+impl Renderer for iced_wgpu::Renderer
 {
    type Style = Box<dyn StyleSheet>;
 
@@ -267,7 +265,7 @@ where
 
    fn draw<Message>(
       &mut self,
-      defaults: &Defaults,
+      defaults: &Self::Defaults,
       layout: Layout<'_>,
       cursor_position: Point,
       viewport: &Rectangle,

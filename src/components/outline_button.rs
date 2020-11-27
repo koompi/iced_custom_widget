@@ -1,5 +1,5 @@
 use crate::styles::outline_button::StyleSheet;
-use iced_graphics::{defaults, Backend, Defaults, Primitive};
+use iced_graphics::{defaults, Primitive};
 use iced_native::{
    event::{self, Event},
    layout::{Limits, Node},
@@ -213,9 +213,7 @@ pub trait Renderer: iced_native::Renderer {
    ) -> Self::Output;
 }
 
-impl<B> Renderer for iced_graphics::Renderer<B>
-where
-   B: Backend,
+impl Renderer for iced_wgpu::Renderer
 {
    const DEFAULT_PADDING: u16 = 8;
 
@@ -248,7 +246,7 @@ where
 
       let (content, _) = content.draw(
          self,
-         &Defaults {
+         &Self::Defaults {
             text: defaults::Text {
                color: styling.text_color,
             },

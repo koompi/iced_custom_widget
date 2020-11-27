@@ -1,6 +1,5 @@
 use iced_native::{Background, Color, Vector};
 
-#[derive(Debug)]
 pub struct Style {
    pub shadow_offset: Vector,
    pub background: Option<Background>,

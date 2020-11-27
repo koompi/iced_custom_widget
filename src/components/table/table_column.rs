@@ -1,3 +1,5 @@
+use smart_default::SmartDefault;
+
 #[derive(Clone, PartialEq, Default, Debug)]
 pub struct TableColumn {
    pub name: String,
@@ -11,22 +13,18 @@ impl std::fmt::Display for TableColumn {
    }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, SmartDefault)]
 pub struct TableOptions {
+   #[default = true]
    pub orderable: bool,
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, SmartDefault)]
 pub enum TableOrder {
-   Unordered,
-   Ascending,
-   Descending,
-}
-
-impl Default for TableOrder {
-   fn default() -> Self {
-      TableOrder::Unordered
-   }
+   #[default]
+   Unordered = 0,
+   Ascending = 1,
+   Descending = 2,
 }
 
 impl TableOrder {
