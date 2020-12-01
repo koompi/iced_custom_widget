@@ -1,10 +1,11 @@
 use smart_default::SmartDefault;
 
-#[derive(Clone, PartialEq, Default, Debug)]
+#[derive(Clone, PartialEq, Default)]
 pub struct TableColumn {
    pub name: String,
    pub label: Option<String>,
    pub short_name: Option<String>,
+   pub order: TableOrder,
 }
 
 impl std::fmt::Display for TableColumn {
@@ -13,9 +14,8 @@ impl std::fmt::Display for TableColumn {
    }
 }
 
-#[derive(Clone, PartialEq, SmartDefault)]
+#[derive(Clone, PartialEq)]
 pub struct TableOptions {
-   #[default = true]
    pub orderable: bool,
 }
 

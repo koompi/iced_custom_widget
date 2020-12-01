@@ -2,7 +2,7 @@ use crate::components::outline_button::{self, OutlineButton};
 use crate::components::stack::{Overflow, Stack};
 use crate::styles::custom_styles;
 use crate::utils::themes::Theme;
-use iced::{Checkbox, Column, Container, Element, Length, Point, Sandbox, Settings, Text};
+use iced::{Checkbox, Column, Container, Element, Length, Point, Sandbox, Text, Settings};
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -17,12 +17,11 @@ pub struct StackDemo {
 }
 
 impl StackDemo {
-   pub fn init() {
-      Self::run(Settings {
-         antialiasing: false,
+   pub fn init() -> iced::Result {
+      StackDemo::run(Settings {
+         default_text_size: 13,
          ..Settings::default()
       })
-      .unwrap();
    }
 }
 

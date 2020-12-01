@@ -1,5 +1,5 @@
-use crate::components::table::{Table, TableData, TableError, TableResult, TableOptions};
-use iced::{window, Container, Element, Length, Sandbox, Settings, scrollable, Scrollable};
+use crate::components::table::{self, Table, TableData, TableError, TableResult, TableOptions};
+use iced::{Container, Element, Length, Sandbox, scrollable, Scrollable, Settings};
 use rand::Rng;
 use crate::styles::custom_styles::CustomScrollable;
 use crate::utils::themes::Theme;
@@ -59,22 +59,15 @@ fn create_mock_tasks() -> Vec<Task> {
 pub struct TableDemo {
    scrollable_state: scrollable::State,
    tasks: Vec<Task>,
+   table_state: table::State,
 }
 
 impl TableDemo {
-   pub fn init() {
-      let settings = Settings {
-         antialiasing: true,
+   pub fn init() -> iced::Result {
+      TableDemo::run(Settings {
          default_text_size: 13,
-         window: window::Settings {
-            resizable: true,
-            transparent: true,
-            decorations: true,
-            ..window::Settings::default()
-         },
          ..Settings::default()
-      };
-      TableDemo::run(settings).unwrap();
+      })
    }
 }
 
@@ -84,8 +77,9 @@ impl Sandbox for TableDemo {
    fn new() -> Self {
       let tasks = create_mock_tasks();
       Self {
-         scrollable_state: scrollable::State::default(),
+         scrollable_state: Default::default(),
          tasks,
+         table_state: Default::default()
       }
    }
 
@@ -103,18 +97,23 @@ impl Sandbox for TableDemo {
          ("description", "Description"),
          ("progress", "Progress"),
          ("responsible_user", "User"),
-         ("is_locked", "Locked", "Loc."),
-         ("is_favorite", "Favorite", "Fav."),
-         ("is_archived", "Archived", "Arch."),
+         ("is_locked", "Locked"),
+         ("is_favorite", "Favorite"),
+         ("is_archived", "Archived"),
       ];
       let option = TableOptions{ orderable: true };
-      let table = Table::new(columns, &mut self.tasks).option(option).column_max_width(227);
+      let table = Table::new(&mut self.table_state, columns, &mut self.tasks)
+         // .width(Length::Fill)
+         // .column_max_width(227.0)
+         .option(option);
+         
       Scrollable::new(&mut self.scrollable_state)
          .push(
             Container::new(table)
-               .center_x()
-               .center_y()
-               .width(Length::Fill),
+            .padding(20)
+            .width(Length::Fill)
+            .center_x()
+            .center_y(),
          )
          .style(CustomScrollable::Default(Theme::light().palette))
          .into()

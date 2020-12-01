@@ -4,7 +4,7 @@ use iced_native::{
    Layout, Length, Point, Rectangle, Size, VerticalAlignment, Widget,
 };
 
-pub struct Icon {
+pub struct IconBrand {
    icon: char,
    width: Length,
    height: Length,
@@ -16,7 +16,7 @@ pub struct Icon {
    vertical_alignment: VerticalAlignment,
 }
 
-impl Icon {
+impl IconBrand {
    pub fn new(icon: char) -> Self {
       Self {
          icon,
@@ -25,7 +25,7 @@ impl Icon {
          color: None,
          font: Font::External {
             name: "Line Awesome",
-            bytes: include_bytes!("../../assets/fonts/la-regular-400.ttf"),
+            bytes: include_bytes!("../../assets/fonts/la-brands-400.ttf"),
          },
          size: None,
          label: String::new(),
@@ -65,7 +65,7 @@ impl Icon {
    }
 }
 
-impl<Message, Renderer> Widget<Message, Renderer> for Icon
+impl<Message, Renderer> Widget<Message, Renderer> for IconBrand
 where
    Renderer: self::Renderer,
 {
@@ -118,11 +118,11 @@ where
    }
 }
 
-impl<'a, Message, Renderer> From<Icon> for Element<'a, Message, Renderer>
+impl<'a, Message, Renderer> From<IconBrand> for Element<'a, Message, Renderer>
 where
    Renderer: self::Renderer + 'a,
 {
-   fn from(icon: Icon) -> Element<'a, Message, Renderer> {
+   fn from(icon: IconBrand) -> Element<'a, Message, Renderer> {
       Element::new(icon)
    }
 }
@@ -202,7 +202,7 @@ where
    }
 }
 
-impl Clone for Icon {
+impl Clone for IconBrand {
    fn clone(&self) -> Self {
       Self {
          icon: self.icon.clone(),

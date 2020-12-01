@@ -5,7 +5,7 @@ authors = ["leang27 <52003343+leang27@users.noreply.github.com>"]
 edition = "2018"
 
 [dependencies]
-iced = {version = "0.2", features = ["debug"]}
+iced = {version = "0.2", features = ["debug", "svg"]}
 iced_native = "0.3.0"
 iced_wgpu = "0.3.0"
 iced_graphics = "0.1.0"

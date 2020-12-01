@@ -6,8 +6,10 @@ pub mod utils;
 
 use examples::menu::Menu;
 use examples::table_demo::TableDemo;
+use examples::system_setting::SystemSetting;
 
-fn main() {
-   TableDemo::init();
-   // Menu::init();
+fn main() -> iced::Result {
+   // TableDemo::init()
+   // Menu::init()
+   SystemSetting::init()
 }

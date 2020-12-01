@@ -1,6 +1,7 @@
+use crate::components::stepper::{self, Stepper};
 use crate::components::card::{self, Card};
 use crate::styles::custom_card::CustomCard;
-use iced::{pick_list, window, Align, Column, Container, Element, Length, PickList, Sandbox, Settings, Text};
+use iced::{pick_list, Column, Container, Element, Length, PickList, Sandbox, Text, Settings};
 use std::fmt::{Display, Formatter, Result};
 use smart_default::SmartDefault;
 
@@ -51,31 +52,31 @@ pub struct CardDemo {
    card_state: card::State,
    pick_list: pick_list::State<Language>,
    selected_language: Language,
+   scale_state: ScaleState
+}
+
+#[derive(SmartDefault)]
+pub struct ScaleState {
+   #[default(1.0)]
+   scale: f32,
+   decrease_btn_state: stepper::State,
+   increase_btn_state: stepper::State,
+}
+
+impl CardDemo {
+   pub fn init() -> iced::Result {
+      CardDemo::run(Settings {
+         default_text_size: 13,
+         ..Settings::default()
+      })
+   }
 }
 
 #[derive(Debug, Clone)]
 pub enum CardMessage {
    OnCardPressed,
    LanguageChanged(Language),
-}
-
-impl CardDemo {
-   pub fn init() {
-      let setting = Settings {
-         default_text_size: 13,
-         antialiasing: true,
-         window: window::Settings {
-            resizable: true,
-            size: (500, 300),
-            transparent: true,
-            decorations: true,
-            ..window::Settings::default()
-         },
-         ..Settings::default()
-      };
-
-      CardDemo::run(setting).unwrap();
-   }
+   ScaleChanged(f32),
 }
 
 impl Sandbox for CardDemo {
@@ -97,6 +98,9 @@ impl Sandbox for CardDemo {
          Self::Message::LanguageChanged(language) => {
             self.selected_language = language;
          }
+         Self::Message::ScaleChanged(scale) => {
+            self.scale_state.scale = scale;
+         }
       }
    }
 
@@ -108,12 +112,7 @@ impl Sandbox for CardDemo {
          Self::Message::LanguageChanged,
       );
       let header = Text::new("Header section");
-      // let body = Text::new("Body section");
-      let body = Column::new()
-         .align_items(Align::Center)
-         .spacing(10)
-         .push(Text::new("Which is your favorite language?"))
-         .push(pick_list);
+      let body = Text::new("Which is your favorite language?");
       let footer = Text::new("Footer section");
       let card = Card::new(&mut self.card_state)
          .header(header)
@@ -123,7 +122,21 @@ impl Sandbox for CardDemo {
          .padding(10)
          .on_pressed(Self::Message::OnCardPressed)
          .style(CustomCard::Default);
-      Container::new(card)
+      
+      let resizer = Stepper::new(
+         self.scale_state.scale,
+         &mut self.scale_state.decrease_btn_state,
+         &mut self.scale_state.increase_btn_state,
+         Self::Message::ScaleChanged,
+      )
+         .step(0.1)
+         .min(0.5)
+         .max(2.);
+      let col = Column::new()
+         .push(card)
+         .push(resizer)
+         .push(pick_list);
+      Container::new(col)
          .width(Length::Fill)
          .height(Length::Fill)
          .center_x()

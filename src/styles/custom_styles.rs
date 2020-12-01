@@ -44,10 +44,11 @@ impl container::StyleSheet for CustomContainer {
             }
             Self::Segmented(_) => container::Style::default().text_color.unwrap_or(Color::BLACK),
          }),
-         border_radius: match self {
-            Self::Segmented(_) => 4.0,
-            _ => container::Style::default().border_radius,
-         },
+         // border_radius: match self {
+         //    Self::Segmented(_) => 4.0,
+         //    _ => container::Style::default().border_radius,
+         // },
+         border_radius: 4.0,
          border_width: match self {
             Self::Segmented(_) => 1.0,
             _ => container::Style::default().border_width,
@@ -105,7 +106,7 @@ impl button::StyleSheet for CustomButton {
                Background::Color(color) => color,
             },
          })),
-         border_radius: 2.0,
+         border_radius: 5.0,
          border_color: match self {
             Self::DefaultBoxed(palette) => Color {
                a: 0.5,

@@ -3,11 +3,11 @@ use super::{
    table_column::{TableColumn, TableOptions, TableOrder},
 };
 use crate::styles::table::StyleSheet;
-use iced::Vector;
 use iced_graphics::Primitive;
 use iced_native::{
-   event::{self, Event}, layout::{Limits, Node}, mouse, text, Color, Element, Hasher, Clipboard,
-   HorizontalAlignment, Layout, Length, Point, Rectangle, Size, VerticalAlignment, Widget, Background,
+   event::{self, Event}, layout::{Limits, Node}, mouse, text, scrollable, container, 
+   Color, Element, Hasher, Clipboard, Vector, Point, Rectangle, Length, Size,
+   HorizontalAlignment, Layout, VerticalAlignment, Widget, Background, Container, Scrollable,
 };
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json::Value;
@@ -16,9 +16,14 @@ pub trait TableData: 'static + Default + Clone + Ord + Serialize + DeserializeOw
    fn get_field_value(&self, field_name: &str) -> Result<Value>;
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, Default)]
 pub struct State {
-   pub orders: Vec<TableOrder>,
+   scrollable: scrollable::State,
+}
+impl State {
+   pub fn new() -> Self {
+      Self::default()
+   }
 }
 
 pub struct Table<'a, T, Renderer>
@@ -26,14 +31,15 @@ where
    T: TableData,
    Renderer: self::Renderer,
 {
-   state: State,
+   state: &'a mut State,
    columns: Vec<TableColumn>,
    data: &'a mut Vec<T>,
+   option: Option<TableOptions>,
    selected_row: Option<usize>,
+   width: Length,
    padding: u16,
    header_spacing: u16,
-   column_max_width: u32,
-   option: TableOptions,
+   column_max_width: Option<f32>,
    text_size: Option<u16>,
    font: Renderer::Font,
    style: Renderer::Style,
@@ -44,18 +50,17 @@ where
    T: TableData,
    Renderer: self::Renderer,
 {
-   pub fn new(columns: Vec<TableColumn>, data: &'a mut Vec<T>) -> Self {
-      Self {
-         state: State {
-            orders: vec![TableOrder::default(); columns.len()]
-         },
+   pub fn new(state: &'a mut State, columns: Vec<TableColumn>, data: &'a mut Vec<T>) -> Self {
+      Table {
+         state,
          columns,
          data,
+         option: None,
          selected_row: None,
+         width: Length::Shrink,
          padding: Renderer::DEFAULT_PADDING,
          header_spacing: Renderer::DEFAULT_HEADER_SPACING,
-         column_max_width: Renderer::DEFAULT_COL_MAX_WIDTH,
-         option: TableOptions::default(),
+         column_max_width: None,
          text_size: None,
          font: Renderer::Font::default(),
          style: Renderer::Style::default(),
@@ -63,12 +68,12 @@ where
    }
 
    pub fn option(mut self, option: TableOptions) -> Self {
-      self.option = option;
+      self.option = Some(option);
       self
    }
 
-   pub fn text_size(mut self, text_size: u16) -> Self {
-      self.text_size = Some(text_size);
+   pub fn width(mut self, width: Length) -> Self {
+      self.width = width;
       self
    }
 
@@ -77,13 +82,18 @@ where
       self
    }
 
+   pub fn column_max_width(mut self, column_max_width: f32) -> Self {
+      self.column_max_width = Some(column_max_width);
+      self
+   }
+
    pub fn header_spacing(mut self, spacing: u16) -> Self {
       self.header_spacing = spacing;
       self
    }
 
-   pub fn column_max_width(mut self, column_max_width: u32) -> Self {
-      self.column_max_width = column_max_width;
+   pub fn text_size(mut self, text_size: u16) -> Self {
+      self.text_size = Some(text_size);
       self
    }
 
@@ -98,24 +108,28 @@ where
    }
 
    fn is_orderable(&self) -> bool {
-      self.option.orderable
+      if let Some(option) = &self.option {
+         option.orderable
+      } else {
+         true
+      }
    }
 
    fn trigger_sort_column(&mut self, idx: usize) {
       use TableOrder::*;
 
-      for (i, x) in self.state.orders.iter_mut().enumerate() {
+      for (i, column) in self.columns.iter_mut().enumerate() {
+         let TableColumn{name, order, ..} = column;
          if i != idx {
-            *x = Unordered
+            *order = Unordered;
          } else {
-            *x = x.toggle()
+            *order = order.toggle();
+            match order {
+               Unordered => self.data.sort(),
+               Ascending => self.data.sort_by_cached_key(|x| x.get_field_value(&name).unwrap().to_string()),
+               Descending => self.data.sort_by_cached_key(|x| std::cmp::Reverse(x.get_field_value(&name).unwrap().to_string())),
+            }
          }
-      }
-      let name = &self.columns[idx].name;
-      match self.state.orders[idx] {
-         Unordered => self.data.sort(),
-         Ascending => self.data.sort_by_cached_key(|x| x.get_field_value(&name).unwrap().to_string()),
-         Descending => self.data.sort_by_cached_key(|x| std::cmp::Reverse(x.get_field_value(&name).unwrap().to_string())),
       }
    }
 }
@@ -126,7 +140,7 @@ where
    Renderer: self::Renderer,
 {
    fn width(&self) -> Length {
-      Length::Shrink
+      self.width
    }
 
    fn height(&self) -> Length {
@@ -135,25 +149,43 @@ where
 
    fn layout(&self, renderer: &Renderer, limits: &Limits) -> Node {
       let padding = f32::from(self.padding);
-      let limits = limits.width(Length::Shrink).height(Length::Shrink);
-      let bounds = limits.resolve(Size::INFINITY);
       let text_size = self.text_size.unwrap_or(renderer.default_size());
+      let limits = limits.width(self.width).height(Length::Shrink);
+      let mut max_cols_size: Vec<Size> = Vec::with_capacity(self.columns.len());
 
-      let mut header_nodes = Vec::new();
-      let mut header_size = Size::ZERO;
-      for (idx, column) in self.columns.iter().enumerate() {
-         let label = column.to_string();
-         let formatted_label = match self.state.orders[idx] {
-            TableOrder::Unordered => label,
-            TableOrder::Ascending => format!("{} ▲", label),
-            TableOrder::Descending => format!("{} ▼", label),
-         };
-         let (width, height) = renderer.measure(&formatted_label, text_size, self.font, bounds);
+      for column in self.columns.iter() {
+         let (width, height) = renderer.measure(&formatted_sortable_column(column.to_string(), column.order), text_size, self.font, Size::new(f32::INFINITY, f32::INFINITY),);
          let size = {
             let intrinsic = Size::new(width+f32::from(text_size), height);
             limits.resolve(intrinsic).pad(padding)
+            // intrinsic.pad(padding)
          };
-         let mut node = Node::new(size);
+         max_cols_size.push(size);
+      }
+      for record in self.data.iter() {
+         self.columns.iter()
+         .map(|c| c.name.as_str())
+         .map(|name| record.get_field_value(name))
+         .filter_map(|h| h.ok())
+         .enumerate()
+         .for_each(|(idx, value)| {
+            let (width, height) = renderer.measure(&serde_json::to_string(&value).unwrap(), text_size, self.font, Size::new(f32::INFINITY, f32::INFINITY),);
+            let size = {
+               let intrinsic = Size::new(if let Some(max_width) = self.column_max_width {width.min(max_width)} else {width}, height);
+               limits.resolve(intrinsic).pad(padding)
+               // intrinsic.pad(padding)
+            };
+            if let Some(max_size) = max_cols_size.get_mut(idx) {
+               max_size.width = max_size.width.max(size.width);
+               max_size.height = max_size.height.max(size.height);
+            }
+         });
+      }
+
+      let mut header_nodes = Vec::new();
+      let mut header_size = Size::ZERO;
+      for size in max_cols_size.iter() {
+         let mut node = Node::new(*size);
          node.move_to(Point::new(header_size.width, 0.0));
          header_size.width += size.width;
          header_size.height = header_size.height.max(size.height);
@@ -164,39 +196,29 @@ where
 
       let mut body_nodes = Vec::with_capacity(self.data.len());
       let mut table_size = Size::new(0.0, header_size.height);
-      self.data.iter().for_each(|record| {
+      for _ in self.data.iter() {
          let mut record_nodes = Vec::with_capacity(self.columns.len());
          let mut record_size = Size::ZERO;
-         self
-            .columns
-            .iter()
-            .map(|c| c.name.as_str())
-            .map(|name| record.get_field_value(name))
-            .filter_map(|h| h.ok())
-            .for_each(|value| {
-               let (width, height) = renderer.measure(&serde_json::to_string(&value).unwrap(), text_size, self.font, bounds);
-               let size = {
-                  let intrinsic = Size::new(width.min(self.column_max_width as f32), height);
-                  limits.resolve(intrinsic).pad(padding)
-               };
-               let mut cell = Node::new(size);
-               cell.move_to(Point::new(record_size.width, table_size.height));
-               record_size.width += size.width;
-               record_size.height = record_size.height.max(size.height);
-               record_nodes.push(cell);
-            });
+         for size in max_cols_size.iter() {
+            let mut cell = Node::new(*size);
+            cell.move_to(Point::new(record_size.width, table_size.height));
+            record_size.width += size.width;
+            record_size.height = record_size.height.max(size.height);
+            record_nodes.push(cell);
+         }
          let record = Node::with_children(record_size, record_nodes);
-         // record.move_to(Point::new(0.0, table_size.height));
+         // record.move_to(Point::new(1.0, table_size.height));
          table_size.width = table_size.width.max(record_size.width);
          table_size.height += record_size.height;
          body_nodes.push(record);
-      });
+      }
       let body = Node::with_children(table_size, body_nodes);
       // body.move_to(Point::new(0.0, header_size.height));
       table_size.width = header_size.width.max(table_size.width)+2.0;
 
       let mut divider = Node::new(Size::new(table_size.width, 1.0));
       divider.move_to(Point::new(0.0, header_size.height));
+
       Node::with_children(table_size, vec![header, divider, body])
    }
 
@@ -215,7 +237,6 @@ where
          cursor_position,
          viewport,
          &self.columns,
-         &self.state.orders,
          &self.data,
          self.is_orderable(),
          self.text_size.unwrap_or(renderer.default_size()),
@@ -269,11 +290,43 @@ where
    }
 }
 
+// struct TableContainer<'a, Message, Renderer: self::Renderer> {
+//    container: Container<'a, Message, Renderer>,
+//    width: Length,
+//    target_height: f32,
+// }
+
+// impl<'a, Message, Renderer> TableContainer<'a, Message, Renderer>
+// where 
+//    Message: 'a,
+//    Renderer: 'a + self::Renderer
+// {
+//    pub fn new<T>(table: Table<'a, T, Renderer>, target_height: f32) -> Self
+//    where T: TableData {
+//       let Table {
+//          state,
+//          option,
+//          width,
+//          padding,
+//          font,
+//          text_size,
+//          style,
+//          ..
+//       } = table;
+
+//       let container = Container::new(Scrollable::new(&mut state.scrollable).push(child)).padding(1);
+//       Self {
+//          container,
+//          width,
+//          target_height,
+//      }
+//    }
+// }
+
 pub trait Renderer: text::Renderer {
    type Style: Default;
    const DEFAULT_PADDING: u16;
    const DEFAULT_HEADER_SPACING: u16;
-   const DEFAULT_COL_MAX_WIDTH: u32 = 127;
 
    fn draw<T: TableData>(
       &mut self,
@@ -282,7 +335,6 @@ pub trait Renderer: text::Renderer {
       cursor_position: Point,
       viewport: &Rectangle,
       columns: &[TableColumn],
-      orders: &[TableOrder],
       data: &[T],
       is_orderable: bool,
       text_size: u16,
@@ -298,7 +350,6 @@ where
    type Style = Box<dyn StyleSheet>;
    const DEFAULT_PADDING: u16 = 6;
    const DEFAULT_HEADER_SPACING: u16 = 1;
-   const DEFAULT_COL_MAX_WIDTH: u32 = 127;
 
    fn draw<T: TableData>(
       &mut self,
@@ -307,7 +358,6 @@ where
       cursor_position: Point,
       viewport: &Rectangle,
       columns: &[TableColumn],
-      orders: &[TableOrder],
       data: &[T],
       is_orderable: bool,
       text_size: u16,
@@ -352,18 +402,11 @@ where
       let header_section = Primitive::Group {
          primitives: columns
             .iter()
-            .map(ToString::to_string)
-            .enumerate()
             .zip(header_layout.children())
-            .map(|((idx, content), layout)| {
+            .map(|(column, layout)| {
                let bounds = layout.bounds();
-               let formatted_label = match orders[idx] {
-                  TableOrder::Unordered => content,
-                  TableOrder::Ascending => format!("{} ▲", content),
-                  TableOrder::Descending => format!("{} ▼", content),
-               };
                Primitive::Text {
-                  content: formatted_label,
+                  content: formatted_sortable_column(column.to_string(), column.order),
                   size: f32::from(text_size),
                   font,
                   color: styling.text_color,
@@ -380,14 +423,14 @@ where
       };
 
       let mut body_records = Vec::with_capacity(data.len());
-      for ((idx, record), record_layout) in data.iter().enumerate().zip(body_layout.children()) {
+      for (record, record_layout) in data.iter().zip(body_layout.children()) {
          // let record_bg = if idx%2==0 {
          //    Primitive::Quad {
          //       bounds: record_layout.bounds(),
          //       background: styling.header_background,
-         //       border_color: styling.border_color,
+         //       border_color: Color::TRANSPARENT,
          //       border_radius: styling.border_radius,
-         //       border_width: styling.border_width
+         //       border_width: 0.0
          //    } 
          // } else {
          //    Primitive::None
@@ -412,7 +455,7 @@ where
                      ..bounds
                   },
                   horizontal_alignment: HorizontalAlignment::Left,
-                  vertical_alignment: VerticalAlignment::Top,
+                  vertical_alignment: VerticalAlignment::Center,
                };
                record_cells.push(
                   Primitive::Clip {
@@ -424,7 +467,7 @@ where
                record_cells
             });
          let record = Primitive::Group{ primitives: record_cells };
-         body_records.push(Primitive::Group{ primitives: vec![record] });
+         body_records.push(record);
       }
       let body_section = Primitive::Group{ primitives: body_records };
       (
@@ -451,5 +494,13 @@ where
 {
    fn from(table: Table<'a, T, Renderer>) -> Element<'a, Message, Renderer> {
       Element::new(table)
+   }
+}
+
+fn formatted_sortable_column(label: String, order: TableOrder) -> String {
+   match order {
+      TableOrder::Unordered => label,
+      TableOrder::Ascending => format!("{} ▲", label),
+      TableOrder::Descending => format!("{} ▼", label),
    }
 }
