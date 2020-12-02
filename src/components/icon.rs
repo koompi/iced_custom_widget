@@ -25,7 +25,7 @@ impl Icon {
          color: None,
          font: Font::External {
             name: "Line Awesome",
-            bytes: include_bytes!("../../assets/fonts/la-regular-400.ttf"),
+            bytes: include_bytes!("../../assets/fonts/la-solid-900.ttf"),
          },
          size: None,
          label: String::new(),

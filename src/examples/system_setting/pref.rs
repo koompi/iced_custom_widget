@@ -1,5 +1,5 @@
-use crate::styles::custom_button::CustomButton;
 use iced::{button, Align, Button, Column, Element, Text, Svg, Length, HorizontalAlignment, Container};
+use super::styles::CustomButton;
 
 #[derive(Debug, Clone)]
 pub struct Pref {
@@ -36,7 +36,7 @@ impl Pref {
       }
    }
 
-   pub fn view(&mut self) -> Element<PrefMessage> {
+   pub fn view_main(&mut self) -> Element<PrefMessage> {
       let icon = Svg::from_path(&self.path).width(Length::Fill).height(Length::Fill);
       let icon_button = Button::new(&mut self.button_state, icon)
          .width(Length::Units(80))
@@ -47,5 +47,22 @@ impl Pref {
       let name = Text::new(&self.name).horizontal_alignment(HorizontalAlignment::Center);
       let pref = Column::new().spacing(10).align_items(Align::Center).push(icon_button).push(name);
       Container::new(pref).width(Length::Units(100)).into()
+   }
+
+   pub fn view_sidebar(&mut self, is_selected: bool) -> Element<PrefMessage> {
+      let icon = Svg::from_path(&self.path).width(Length::Fill).height(Length::Fill);
+      let icon_container = Container::new(icon)
+         .width(Length::Units(65))
+         .height(Length::Units(65));
+      let name = Text::new(&self.name).horizontal_alignment(HorizontalAlignment::Center);
+      let pref = Column::new().spacing(10).align_items(Align::Center).push(icon_container).push(name);
+      Button::new(&mut self.button_state, pref)
+         .width(Length::Units(100))
+         .padding(10)
+         .on_press(PrefMessage::PrefClicked)
+         .style(
+            if is_selected {CustomButton::Selected} 
+            else {CustomButton::Sidebar}
+         ).into()
    }
 }

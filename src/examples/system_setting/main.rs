@@ -1,10 +1,14 @@
 use super::pref::{Pref, PrefMessage, Category};
-use crate::components::grid::Grid;
+use super::styles::CustomButton;
+use crate::components::{
+   grid::Grid,
+   icon::Icon
+};
 use crate::styles::custom_styles::{CustomTextInput, CustomContainer};
 use crate::utils::themes::Theme;
 use iced::{
-   executor, scrollable, text_input, window, button, Align, Application, Column, Command, 
-   Container, Element, Length, Row, Scrollable, TextInput, Settings, Space, Text
+   executor, scrollable, text_input, button, Align, Application, Column, Command, 
+   Container, Element, Length, Row, Scrollable, TextInput, Settings, Space, Text, Button
 };
 
 pub struct SystemSetting {
@@ -12,32 +16,10 @@ pub struct SystemSetting {
    search_text: String,
    prefs: Vec<Pref>,
    selected_pref: Option<usize>,
-   current_page: PageModel,
-   previous_page: Option<PageModel>,
+   pages_stack: Vec<PageModel>,
    back_btn_state: button::State,
+   sidebar_scroll: scrollable::State,
    scroll: scrollable::State,
-}
-
-#[derive(Debug, Clone)]
-pub enum Page {
-   HomePage,
-}
-
-enum PageModel {
-   HomePage
-}
-
-impl SystemSetting {
-   pub fn init() -> iced::Result {
-      SystemSetting::run(Settings {
-         default_text_size: 13,
-         window: window::Settings {
-            resizable: false,
-            ..window::Settings::default()
-         },
-         ..Settings::default()
-      })
-   }
 }
 
 #[derive(Debug, Clone)]
@@ -89,10 +71,10 @@ impl Application for SystemSetting {
             input_search: text_input::State::new(),
             search_text: String::new(),
             prefs,
-            current_page: PageModel::HomePage,
-            previous_page: None,
+            pages_stack: vec![PageModel::HomePage],
             selected_pref: None,
             back_btn_state: button::State::new(),
+            sidebar_scroll: scrollable::State::new(),
             scroll: scrollable::State::new()
          },
          Command::none(),
@@ -112,54 +94,78 @@ impl Application for SystemSetting {
                pref.update(pref_message);
                self.selected_pref = Some(i);
             }
+
+            // Command::perform(future, SystemMessage::Navigation())
          },
          Self::Message::Navigation(page) => {
-            self.current_page = match page {
+            let next_page = match page {
                Page::HomePage => PageModel::HomePage
             };
+            self.pages_stack.push(next_page);
          },
          Self::Message::NavigateBack => {
-            // if let Some(previous_page) = &self.previous_page {
-            //    self.current_page = previous_page;
-            // }
+            if self.pages_stack.len() > 1 {
+               self.pages_stack.pop();
+            }
          }
       }
       Command::none()
    }
 
    fn view(&mut self) -> Element<Self::Message> {
-      let search = TextInput::new(
-         &mut self.input_search,
-         "Search",
-         &mut self.search_text,
-         Self::Message::SearchChanged,
-      )
-      .padding(10)
-      .max_width(800)
-      .width(Length::Units(500))
-      .size(17)
-      .style(CustomTextInput::Default(Theme::light().palette))
-      .on_submit(Self::Message::ActionSearch);
+      let search = TextInput::new(&mut self.input_search, "Search", &mut self.search_text, Self::Message::SearchChanged)
+         .padding(10)
+         .max_width(800)
+         .width(Length::Units(500))
+         .size(17)
+         .style(CustomTextInput::Default(Theme::light().palette))
+         .on_submit(Self::Message::ActionSearch);
       let search_section = Container::new(search).center_x().center_y().width(Length::Fill);
+      let mut back_btn = Button::new(&mut self.back_btn_state, Icon::new('\u{f104}').size(20))
+         .padding(7)
+         .style(CustomButton::Default);
+      if self.pages_stack.len() > 1 {
+         back_btn = back_btn.on_press(SystemMessage::NavigateBack);
+      }
+      let search_bar = Row::new()
+         .push(back_btn)
+         .push(search_section);
 
-      let content = if let Some(selected_pref) = &self.selected_pref {
-         println!("{:?}", selected_pref);
+      let sidebar = if let Some(selected_pref) = &self.selected_pref {
+         let (personal_prefs, device_prefs) = self.prefs.iter_mut().enumerate()
+            .fold((Column::new().spacing(10), Column::new().spacing(10)), |(personal_prefs, device_prefs), (idx, pref)| {
+               match pref.category {
+                  Category::Personal => (personal_prefs.push(pref.view_sidebar(idx == *selected_pref).map(move |message| SystemMessage::PrefMessage(idx, message))), device_prefs),
+                  Category::Device => (personal_prefs, device_prefs.push(pref.view_sidebar(idx == *selected_pref).map(move |message| SystemMessage::PrefMessage(idx, message))))
+               }
+            });
+         let personal_section = Column::new()
+            .spacing(15)
+            .push(Container::new(Text::new("Personal").size(15)).padding(7).style(CustomContainer::FadedBrightForeground(Theme::light().palette)))
+            .push(personal_prefs);
+         let device_section = Column::new()
+            .spacing(15)
+            .push(Container::new(Text::new("Device").size(15)).padding(7).style(CustomContainer::FadedBrightForeground(Theme::light().palette)))
+            .push(device_prefs);
          Container::new(
-            Column::new()
-               .spacing(30)
-               .width(Length::Fill)
-               .align_items(Align::Center)
-               .push(search_section)
+            Scrollable::new(&mut self.sidebar_scroll)
+            .padding(15)
+            .spacing(20)
+            .scroller_width(5)
+            .scrollbar_width(5)
+            .push(personal_section)
+            .push(device_section)
          )
+         .width(Length::Units(125))
       } else {
          let (personal_prefs, device_prefs) = self.prefs.iter_mut().enumerate()
          .fold((Grid::new().column_width(125), Grid::new().column_width(125)), |(personal_prefs, device_prefs), (idx, pref)| {
             match pref.category {
-               Category::Personal => (personal_prefs.push(pref.view().map(move |message| Self::Message::PrefMessage(idx, message))), device_prefs),
-               Category::Device => (personal_prefs, device_prefs.push(pref.view().map(move |message| Self::Message::PrefMessage(idx, message)))),
+               Category::Personal => (personal_prefs.push(pref.view_main().map(move |message| SystemMessage::PrefMessage(idx, message))), device_prefs),
+               Category::Device => (personal_prefs, device_prefs.push(pref.view_main().map(move |message| SystemMessage::PrefMessage(idx, message)))),
             }
          });
-
+         
          let personal_section = Container::new(
             Column::new()
             .spacing(15)
@@ -180,18 +186,59 @@ impl Application for SystemSetting {
             )
             .push(device_prefs)
          );
-
+         
          Container::new(
-            Column::new()
-            .spacing(30)
-            .width(Length::Fill)
-            .align_items(Align::Center)
-            .push(search_section)
-            .push(personal_section)
-            .push(device_section)
-         )
+            Scrollable::new(&mut self.scroll)
+            .push(
+               Column::new()
+               .spacing(30)
+               .width(Length::Fill)
+               .align_items(Align::Center)
+               .push(personal_section)
+               .push(device_section)
+            )
+         ).width(Length::Fill)
       };
 
-      Scrollable::new(&mut self.scroll).padding(20).push(content).into()
+      let content = match self.pages_stack.last().unwrap() {
+         PageModel::HomePage => Container::new(Space::with_width(Length::Shrink))
+      };
+
+      Container::new(
+         Column::new()
+         .spacing(30)
+         .width(Length::Fill)
+         .align_items(Align::Center)
+         .push(search_bar)
+         .push(
+            Row::new()
+            .spacing(20)
+            .push(sidebar)
+            .push(content)
+         )
+      ).padding(30).into()
+   }
+}
+
+#[derive(Debug, Clone)]
+pub enum Page {
+   HomePage,
+   // GeneralPage
+}
+
+#[derive(Debug, Clone)]
+enum PageModel {
+   HomePage,
+   // GeneralPage {
+
+   // }
+}
+
+impl SystemSetting {
+   pub fn init() -> iced::Result {
+      SystemSetting::run(Settings {
+         default_text_size: 13,
+         ..Settings::default()
+      })
    }
 }
