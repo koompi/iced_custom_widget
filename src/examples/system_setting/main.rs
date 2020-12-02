@@ -1,5 +1,6 @@
 use super::pref::{Pref, PrefMessage, Category};
 use super::styles::CustomButton;
+use super::pages::{Pages, PagesMessage};
 use crate::components::{
    grid::Grid,
    icon::Icon
@@ -16,18 +17,19 @@ pub struct SystemSetting {
    search_text: String,
    prefs: Vec<Pref>,
    selected_pref: Option<usize>,
-   pages_stack: Vec<PageModel>,
+   pages: Pages,
    back_btn_state: button::State,
    sidebar_scroll: scrollable::State,
    scroll: scrollable::State,
 }
+
 
 #[derive(Debug, Clone)]
 pub enum SystemMessage {
    SearchChanged(String),
    ActionSearch,
    PrefMessage(usize, PrefMessage),
-   Navigation(Page),
+   PagesMessage(PagesMessage),
    NavigateBack
 }
 
@@ -71,7 +73,7 @@ impl Application for SystemSetting {
             input_search: text_input::State::new(),
             search_text: String::new(),
             prefs,
-            pages_stack: vec![PageModel::HomePage],
+            pages: Pages::new(),
             selected_pref: None,
             back_btn_state: button::State::new(),
             sidebar_scroll: scrollable::State::new(),
@@ -82,7 +84,7 @@ impl Application for SystemSetting {
    }
 
    fn title(&self) -> String {
-      String::from("Menu")
+      self.pages.title().to_string()
    }
 
    fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
@@ -93,20 +95,26 @@ impl Application for SystemSetting {
             if let Some(pref) = self.prefs.get_mut(i) {
                pref.update(pref_message);
                self.selected_pref = Some(i);
+               self.pages.set_current(i+1);
             }
 
             // Command::perform(future, SystemMessage::Navigation())
          },
-         Self::Message::Navigation(page) => {
-            let next_page = match page {
-               Page::HomePage => PageModel::HomePage
-            };
-            self.pages_stack.push(next_page);
-         },
+         // Self::Message::Navigation(page) => {
+         //    let next_page = match page {
+         //       Page::HomePage => PageModel::HomePage
+         //    };
+         //    self.pages_stack.push(next_page);
+         // },
          Self::Message::NavigateBack => {
-            if self.pages_stack.len() > 1 {
-               self.pages_stack.pop();
-            }
+            // if self.pages_stack.len() > 1 {
+            //    self.pages_stack.pop();
+            // }
+            self.selected_pref = None;
+            self.pages.set_current(0)
+         }
+         Self::Message::PagesMessage(page_msg) => {
+            self.pages.update(page_msg);
          }
       }
       Command::none()
@@ -124,7 +132,7 @@ impl Application for SystemSetting {
       let mut back_btn = Button::new(&mut self.back_btn_state, Icon::new('\u{f104}').size(20))
          .padding(7)
          .style(CustomButton::Default);
-      if self.pages_stack.len() > 1 {
+      if self.selected_pref.is_some() {
          back_btn = back_btn.on_press(SystemMessage::NavigateBack);
       }
       let search_bar = Row::new()
@@ -200,15 +208,12 @@ impl Application for SystemSetting {
          ).width(Length::Fill)
       };
 
-      let content = match self.pages_stack.last().unwrap() {
-         PageModel::HomePage => Container::new(Space::with_width(Length::Shrink))
-      };
+      let content = self.pages.view().map(SystemMessage::PagesMessage);
 
       Container::new(
          Column::new()
          .spacing(30)
          .width(Length::Fill)
-         .align_items(Align::Center)
          .push(search_bar)
          .push(
             Row::new()
@@ -218,20 +223,6 @@ impl Application for SystemSetting {
          )
       ).padding(30).into()
    }
-}
-
-#[derive(Debug, Clone)]
-pub enum Page {
-   HomePage,
-   // GeneralPage
-}
-
-#[derive(Debug, Clone)]
-enum PageModel {
-   HomePage,
-   // GeneralPage {
-
-   // }
 }
 
 impl SystemSetting {
