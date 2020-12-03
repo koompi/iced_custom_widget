@@ -157,8 +157,8 @@ where
          let (width, height) = renderer.measure(&formatted_sortable_column(column.to_string(), column.order), text_size, self.font, Size::new(f32::INFINITY, f32::INFINITY),);
          let size = {
             let intrinsic = Size::new(width+f32::from(text_size), height);
-            limits.resolve(intrinsic).pad(padding)
-            // intrinsic.pad(padding)
+            // limits.resolve(intrinsic).pad(padding)
+            intrinsic.pad(padding)
          };
          max_cols_size.push(size);
       }
@@ -172,8 +172,8 @@ where
             let (width, height) = renderer.measure(&serde_json::to_string(&value).unwrap(), text_size, self.font, Size::new(f32::INFINITY, f32::INFINITY),);
             let size = {
                let intrinsic = Size::new(if let Some(max_width) = self.column_max_width {width.min(max_width)} else {width}, height);
-               limits.resolve(intrinsic).pad(padding)
-               // intrinsic.pad(padding)
+               // limits.resolve(intrinsic).pad(padding)
+               intrinsic.pad(padding)
             };
             if let Some(max_size) = max_cols_size.get_mut(idx) {
                max_size.width = max_size.width.max(size.width);

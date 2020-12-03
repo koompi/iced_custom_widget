@@ -8,7 +8,7 @@ use crate::components::{
 use crate::styles::custom_styles::{CustomTextInput, CustomContainer};
 use crate::utils::themes::Theme;
 use iced::{
-   executor, scrollable, text_input, button, Align, Application, Column, Command, 
+   executor, scrollable, text_input, button, window, Align, Application, Column, Command, 
    Container, Element, Length, Row, Scrollable, TextInput, Settings, Space, Text, Button
 };
 
@@ -45,27 +45,27 @@ impl Application for SystemSetting {
       };
 
       let prefs = vec![
-         pref("window", "General", Personal),
-         pref("time", "Date & Time", Personal),
-         pref("language", "Language & Region", Personal),
-         pref("users", "Users & Groups", Personal),
-         pref("accessibility", "Accessibility", Personal),
-         pref("account", "Accounts", Personal),
-         pref("notification", "Notifications", Personal),
-         pref("privacy", "Security & Privacy", Personal),
-         pref("update", "Software Update", Personal),
-         pref("network", "Network", Device),
-         pref("bluetooth", "Bluetooth", Device),
-         pref("sound", "Sound", Device),
-         pref("printer", "Printers & Scanners", Device),
-         pref("camera", "Camera", Device),
-         pref("keyboard", "Keyboard", Device),
-         pref("touchpad", "Touchpad", Device),
-         pref("mic", "Microphone", Device),
-         pref("mouse", "Mouse", Device),
-         pref("display", "Display", Device),
-         pref("battery", "Battery", Device),
-         pref("disk", "Disk Drive", Device),
+         pref("window", "General", System),
+         pref("time", "Date & Time", System),
+         pref("language", "Language & Region", System),
+         pref("users", "Users & Groups", System),
+         pref("accessibility", "Accessibility", System),
+         pref("account", "Accounts", System),
+         pref("notification", "Notifications", System),
+         pref("privacy", "Security & Privacy", System),
+         pref("update", "Software Update", System),
+         pref("network", "Network", Hardware),
+         pref("bluetooth", "Bluetooth", Hardware),
+         pref("sound", "Sound", Hardware),
+         pref("printer", "Printers & Scanners", Hardware),
+         pref("camera", "Camera", Hardware),
+         pref("keyboard", "Keyboard", Hardware),
+         pref("touchpad", "Touchpad", Hardware),
+         pref("mic", "Microphone", Hardware),
+         pref("mouse", "Mouse", Hardware),
+         pref("display", "Display", Hardware),
+         pref("battery", "Battery", Hardware),
+         pref("disk", "Disk Drive", Hardware),
       ];
 
       (
@@ -129,13 +129,15 @@ impl Application for SystemSetting {
          .style(CustomTextInput::Default(Theme::light().palette))
          .on_submit(Self::Message::ActionSearch);
       let search_section = Container::new(search).center_x().center_y().width(Length::Fill);
-      let mut back_btn = Button::new(&mut self.back_btn_state, Icon::new('\u{f104}').size(20))
+      let mut back_btn = Button::new(&mut self.back_btn_state, Icon::new('\u{f0ce}').size(20))
          .padding(7)
-         .style(CustomButton::Default);
+         .style(CustomButton::Text);
       if self.selected_pref.is_some() {
          back_btn = back_btn.on_press(SystemMessage::NavigateBack);
       }
       let search_bar = Row::new()
+         .spacing(20)
+         .padding(30)
          .push(back_btn)
          .push(search_section);
 
@@ -143,17 +145,17 @@ impl Application for SystemSetting {
          let (personal_prefs, device_prefs) = self.prefs.iter_mut().enumerate()
             .fold((Column::new().spacing(10), Column::new().spacing(10)), |(personal_prefs, device_prefs), (idx, pref)| {
                match pref.category {
-                  Category::Personal => (personal_prefs.push(pref.view_sidebar(idx == *selected_pref).map(move |message| SystemMessage::PrefMessage(idx, message))), device_prefs),
-                  Category::Device => (personal_prefs, device_prefs.push(pref.view_sidebar(idx == *selected_pref).map(move |message| SystemMessage::PrefMessage(idx, message))))
+                  Category::System => (personal_prefs.push(pref.view_sidebar(idx == *selected_pref).map(move |message| SystemMessage::PrefMessage(idx, message))), device_prefs),
+                  Category::Hardware => (personal_prefs, device_prefs.push(pref.view_sidebar(idx == *selected_pref).map(move |message| SystemMessage::PrefMessage(idx, message))))
                }
             });
          let personal_section = Column::new()
             .spacing(15)
-            .push(Container::new(Text::new("Personal").size(15)).padding(7).style(CustomContainer::FadedBrightForeground(Theme::light().palette)))
+            .push(Container::new(Text::new("System").size(15)).padding(7).style(CustomContainer::FadedBrightForeground(Theme::light().palette)))
             .push(personal_prefs);
          let device_section = Column::new()
             .spacing(15)
-            .push(Container::new(Text::new("Device").size(15)).padding(7).style(CustomContainer::FadedBrightForeground(Theme::light().palette)))
+            .push(Container::new(Text::new("Hardware").size(15)).padding(7).style(CustomContainer::FadedBrightForeground(Theme::light().palette)))
             .push(device_prefs);
          Container::new(
             Scrollable::new(&mut self.sidebar_scroll)
@@ -164,13 +166,13 @@ impl Application for SystemSetting {
             .push(personal_section)
             .push(device_section)
          )
-         .width(Length::Units(125))
+         .width(Length::Units(110))
       } else {
          let (personal_prefs, device_prefs) = self.prefs.iter_mut().enumerate()
          .fold((Grid::new().column_width(125), Grid::new().column_width(125)), |(personal_prefs, device_prefs), (idx, pref)| {
             match pref.category {
-               Category::Personal => (personal_prefs.push(pref.view_main().map(move |message| SystemMessage::PrefMessage(idx, message))), device_prefs),
-               Category::Device => (personal_prefs, device_prefs.push(pref.view_main().map(move |message| SystemMessage::PrefMessage(idx, message)))),
+               Category::System => (personal_prefs.push(pref.view_main().map(move |message| SystemMessage::PrefMessage(idx, message))), device_prefs),
+               Category::Hardware => (personal_prefs, device_prefs.push(pref.view_main().map(move |message| SystemMessage::PrefMessage(idx, message)))),
             }
          });
          
@@ -180,7 +182,7 @@ impl Application for SystemSetting {
             .push(
                Row::new()
                .push(Space::with_width(Length::Units(20)))
-               .push(Container::new(Text::new("Personal").size(15)).padding(7).style(CustomContainer::FadedBrightForeground(Theme::light().palette)))
+               .push(Container::new(Text::new("System").size(15)).padding(7).style(CustomContainer::FadedBrightForeground(Theme::light().palette)))
             )
             .push(personal_prefs)
          );
@@ -190,13 +192,14 @@ impl Application for SystemSetting {
             .push(
                Row::new()
                .push(Space::with_width(Length::Units(20)))
-               .push(Container::new(Text::new("Device").size(15)).padding(7).style(CustomContainer::FadedBrightForeground(Theme::light().palette)))
+               .push(Container::new(Text::new("Hardware").size(15)).padding(7).style(CustomContainer::FadedBrightForeground(Theme::light().palette)))
             )
             .push(device_prefs)
          );
          
          Container::new(
             Scrollable::new(&mut self.scroll)
+            .padding(20)
             .push(
                Column::new()
                .spacing(30)
@@ -205,23 +208,24 @@ impl Application for SystemSetting {
                .push(personal_section)
                .push(device_section)
             )
-         ).width(Length::Fill)
+         )
+         .width(Length::Fill)
       };
 
       let content = self.pages.view().map(SystemMessage::PagesMessage);
 
       Container::new(
          Column::new()
-         .spacing(30)
+         .spacing(10)
          .width(Length::Fill)
          .push(search_bar)
          .push(
             Row::new()
-            .spacing(20)
+            .spacing(15)
             .push(sidebar)
             .push(content)
          )
-      ).padding(30).into()
+      ).into()
    }
 }
 
@@ -229,6 +233,10 @@ impl SystemSetting {
    pub fn init() -> iced::Result {
       SystemSetting::run(Settings {
          default_text_size: 13,
+         window: window::Settings {
+            min_size: Some((600, 700)),
+            ..window::Settings::default()
+         },
          ..Settings::default()
       })
    }

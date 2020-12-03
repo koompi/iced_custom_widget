@@ -1,9 +1,12 @@
-mod home_page;
 mod general_page;
+mod bluetooth_page;
+mod sound_page;
 
-use home_page::home_page;
-use general_page::general_page;
-use iced::Element; 
+use bluetooth_page::{BluetoothPage, BluetoothMessage};
+use sound_page::{SoundPage, SoundMessage};
+use iced::{
+   Element, Container, Length, Space
+}; 
 
 pub struct Pages {
    pages: Vec<PageModel>,
@@ -12,7 +15,9 @@ pub struct Pages {
 
 #[derive(Debug, Clone)]
 pub enum PagesMessage {
-   CheckboxToggle(bool)
+   CheckboxToggle(bool),
+   BluetoothMessage(BluetoothMessage),
+   SoundMessage(SoundMessage)
 }
 
 #[derive(Debug, Clone)]
@@ -30,8 +35,12 @@ pub enum PageModel {
    SecurityPage,
    UpdatePage,
    NetworkPage,
-   BluetoothPage,
-   SoundPage,
+   BluetoothPageModel {
+      bluetooth_page: BluetoothPage
+   },
+   SoundPageModel {
+      sound_page: SoundPage
+   },
    PrinterPage,
    CameraPage,
    KeyboardPage,
@@ -61,8 +70,12 @@ impl Pages {
             SecurityPage,
             UpdatePage,
             NetworkPage,
-            BluetoothPage,
-            SoundPage,
+            BluetoothPageModel {
+               bluetooth_page: BluetoothPage::new()
+            },
+            SoundPageModel {
+               sound_page: SoundPage::new()
+            },
             PrinterPage,
             CameraPage,
             KeyboardPage,
@@ -96,10 +109,22 @@ impl Pages {
 
 impl PageModel {
    fn update(&mut self, msg: PagesMessage) {
+      use PagesMessage::*;
+      use PageModel::*;
       match msg {
-         PagesMessage::CheckboxToggle(b) => {
-            if let PageModel::GeneralPage{checkbox} = self {
+         CheckboxToggle(b) => {
+            if let GeneralPage{checkbox} = self {
                *checkbox = b;
+            }
+         }
+         BluetoothMessage(msg) => {
+            if let BluetoothPageModel{ bluetooth_page } = self {
+               bluetooth_page.update(msg);
+            }
+         }
+         SoundMessage(msg) => {
+            if let SoundPageModel{ sound_page } = self {
+               sound_page.update(msg);
             }
          }
       }
@@ -108,29 +133,29 @@ impl PageModel {
    fn view(&mut self) -> Element<PagesMessage> {
       use PageModel::*;
       match self {
-         HomePage => home_page(),
-         GeneralPage { checkbox } => general_page(*checkbox),
-         DateTimePage => home_page(),
-         LanguagePage => home_page(),
-         UsersPage => home_page(),
-         AccessPage => home_page(),
-         AccountPage => home_page(),
-         NotiPage => home_page(),
-         SecurityPage => home_page(),
-         UpdatePage => home_page(),
-         NetworkPage => home_page(),
-         BluetoothPage => home_page(),
-         SoundPage => home_page(),
-         PrinterPage => home_page(),
-         CameraPage => home_page(),
-         KeyboardPage => home_page(),
-         TouchpadPage=> home_page(),
-         MicPage=> home_page(),
-         MousePage=> home_page(),
-         DisplayPage=> home_page(),
-         BatteryPage=> home_page(),
-         DiskDrivePage => home_page()
-      }.into()
+         HomePage => Container::new(Space::with_width(Length::Shrink)).into(),
+         GeneralPage { .. } => Container::new(Space::with_width(Length::Shrink)).into(),
+         DateTimePage => Container::new(Space::with_width(Length::Shrink)).into(),
+         LanguagePage => Container::new(Space::with_width(Length::Shrink)).into(),
+         UsersPage => Container::new(Space::with_width(Length::Shrink)).into(),
+         AccessPage => Container::new(Space::with_width(Length::Shrink)).into(),
+         AccountPage => Container::new(Space::with_width(Length::Shrink)).into(),
+         NotiPage => Container::new(Space::with_width(Length::Shrink)).into(),
+         SecurityPage => Container::new(Space::with_width(Length::Shrink)).into(),
+         UpdatePage => Container::new(Space::with_width(Length::Shrink)).into(),
+         NetworkPage => Container::new(Space::with_width(Length::Shrink)).into(),
+         BluetoothPageModel { bluetooth_page } => bluetooth_page.view().map(move |msg| PagesMessage::BluetoothMessage(msg)),
+         SoundPageModel{ sound_page } => sound_page.view().map(move |msg| PagesMessage::SoundMessage(msg)),
+         PrinterPage => Container::new(Space::with_width(Length::Shrink)).into(),
+         CameraPage => Container::new(Space::with_width(Length::Shrink)).into(),
+         KeyboardPage => Container::new(Space::with_width(Length::Shrink)).into(),
+         TouchpadPage=> Container::new(Space::with_width(Length::Shrink)).into(),
+         MicPage=> Container::new(Space::with_width(Length::Shrink)).into(),
+         MousePage=> Container::new(Space::with_width(Length::Shrink)).into(),
+         DisplayPage=> Container::new(Space::with_width(Length::Shrink)).into(),
+         BatteryPage=> Container::new(Space::with_width(Length::Shrink)).into(),
+         DiskDrivePage => Container::new(Space::with_width(Length::Shrink)).into()
+      }
    }
 
    fn title(&self) -> &str {
@@ -147,8 +172,8 @@ impl PageModel {
          SecurityPage => "Security & Privacy",
          UpdatePage => "Software Update",
          NetworkPage => "Network",
-         BluetoothPage => "Bluetooth",
-         SoundPage => "Sound",
+         BluetoothPageModel {..} => "Bluetooth",
+         SoundPageModel {..} => "Sound",
          PrinterPage => "Printers & Scanners",
          CameraPage => "Camera",
          KeyboardPage => "Keyboard",

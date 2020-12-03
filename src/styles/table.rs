@@ -19,8 +19,8 @@ impl std::default::Default for Style {
          text_color: Color::BLACK,
          background: Background::Color(Color::WHITE),
          header_background: Background::Color(Color::from_rgba8(238, 238, 238, 1.0)),
-         border_radius: 8.0,
-         border_width: 1.0,
+         border_radius: 0.0,
+         border_width: 0.0,
          border_color: Color::BLACK,
          icon_size: 0.7,
       }

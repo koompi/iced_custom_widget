@@ -11,8 +11,8 @@ pub struct Pref {
 
 #[derive(Debug, Clone)]
 pub enum Category {
-   Personal,
-   Device
+   System,
+   Hardware
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -43,7 +43,7 @@ impl Pref {
          .height(Length::Units(80))
          .padding(10)
          .on_press(PrefMessage::PrefClicked)
-         .style(CustomButton::Default);
+         .style(CustomButton::Text);
       let name = Text::new(&self.name).horizontal_alignment(HorizontalAlignment::Center);
       let pref = Column::new().spacing(10).align_items(Align::Center).push(icon_button).push(name);
       Container::new(pref).width(Length::Units(100)).into()
@@ -57,8 +57,8 @@ impl Pref {
       let name = Text::new(&self.name).horizontal_alignment(HorizontalAlignment::Center);
       let pref = Column::new().spacing(10).align_items(Align::Center).push(icon_container).push(name);
       Button::new(&mut self.button_state, pref)
-         .width(Length::Units(100))
-         .padding(10)
+         .width(Length::Units(85))
+         .padding(6)
          .on_press(PrefMessage::PrefClicked)
          .style(
             if is_selected {CustomButton::Selected} 
