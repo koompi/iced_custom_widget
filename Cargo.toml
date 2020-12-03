@@ -1,7 +1,7 @@
 [package]
 name = "iced_custom_widget"
 version = "0.1.0"
-authors = ["leang27 <52003343+leang27@users.noreply.github.com>"]
+authors = ["hangleang <hangleang127@gmail.com>"]
 edition = "2018"
 
 [dependencies]
