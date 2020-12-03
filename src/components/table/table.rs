@@ -482,7 +482,7 @@ where
 }
 
 #[derive(Debug)]
-pub enum TableEvent {
+enum TableEvent {
    SortColumn(usize),
 }
 

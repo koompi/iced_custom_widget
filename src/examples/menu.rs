@@ -1,5 +1,6 @@
 use super::app::{App, AppMessage};
 use crate::styles::custom_styles::CustomTextInput;
+use crate::components::grid::Grid;
 use crate::utils::themes::Theme;
 use iced::{
    button, executor, scrollable, text_input, Align, Application, Column, Command, Container, Element, Length,
@@ -241,15 +242,10 @@ impl Application for Menu {
          .align_items(Align::Center)
          .push(search_section);
 
-      // let menu: Element<_> = self
-      //    .filtered_application
-      //    .iter_mut()
-      //    .enumerate()
-      //    .fold(Grid::new().column_width(175), |grid, (i, app)| {
-      //       grid.push(app.view().map(move |message| MenuMessage::AppMessage(i, message)))
-      //    })
-      //    .into();
-      let menu: Element<_> = grid!(self.filtered_application, 175, MenuMessage::AppMessage).into();
+      let menu: Element<_> = self.filtered_application.iter_mut().enumerate()
+         .fold(Grid::new().column_width(175), |grid, (i, app)| {
+            grid.push(app.view().map(move |message| MenuMessage::AppMessage(i, message)))
+         }).into();
 
       let content = Column::new()
          .spacing(20)
