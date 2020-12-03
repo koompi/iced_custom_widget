@@ -1169,7 +1169,7 @@ checksum = "c1594f842b6d05b38a1432ed0b9fa8d237d6395a3b9d0fefcc28c61e57eba3a5"
 
 [[package]]
 name = "iced_custom_widget"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "iced",
  "iced_graphics",
