@@ -1,12 +1,11 @@
-use super::app::{App, AppMessage};
-use crate::styles::custom_styles::CustomTextInput;
-use crate::components::grid::Grid;
-use crate::utils::themes::Theme;
+use cw::components::grid::Grid;
+use cw::styles::custom_styles::CustomTextInput;
+use cw::utils::{app::App, app::AppMessage, themes::Theme};
 use iced::{
-   button, executor, scrollable, text_input, Align, Application, Column, Command, Container, Element, Length,
-   Row, Scrollable, TextInput, Settings, window
+   button, executor, scrollable, text_input, window, Align, Application, Column, Command,
+   Container, Element, Length, Row, Scrollable, Settings, TextInput,
 };
-
+use iced_custom_widget as cw;
 pub struct Menu {
    input_search: text_input::State,
    search_text: String,
@@ -27,7 +26,6 @@ impl Menu {
       })
    }
 }
-
 
 #[derive(Debug, Clone)]
 pub enum MenuMessage {
@@ -185,7 +183,7 @@ impl Application for Menu {
             search_text: String::new(),
             applications: applications.clone(),
             filtered_application: applications.clone(),
-            scroll: scrollable::State::new()
+            scroll: scrollable::State::new(),
          },
          Command::none(),
       )
@@ -202,7 +200,11 @@ impl Application for Menu {
             self.filtered_application = self
                .applications
                .iter()
-               .filter(|app| app.name.to_lowercase().contains(&self.search_text.to_lowercase()))
+               .filter(|app| {
+                  app.name
+                     .to_lowercase()
+                     .contains(&self.search_text.to_lowercase())
+               })
                .cloned()
                .collect();
          }
@@ -210,7 +212,11 @@ impl Application for Menu {
             self.filtered_application = self
                .applications
                .iter()
-               .filter(|app| app.name.to_lowercase().contains(&self.search_text.to_lowercase()))
+               .filter(|app| {
+                  app.name
+                     .to_lowercase()
+                     .contains(&self.search_text.to_lowercase())
+               })
                .cloned()
                .collect();
          }
@@ -236,16 +242,26 @@ impl Application for Menu {
       .size(17)
       .style(CustomTextInput::Default(Theme::light().palette))
       .on_submit(MenuMessage::ActionSearch);
-      let search_section = Container::new(search).center_x().center_y().width(Length::Fill);
+      let search_section = Container::new(search)
+         .center_x()
+         .center_y()
+         .width(Length::Fill);
       let search_bar = Row::new()
          .spacing(20)
          .align_items(Align::Center)
          .push(search_section);
 
-      let menu: Element<_> = self.filtered_application.iter_mut().enumerate()
+      let menu: Element<_> = self
+         .filtered_application
+         .iter_mut()
+         .enumerate()
          .fold(Grid::new().column_width(175), |grid, (i, app)| {
-            grid.push(app.view().map(move |message| MenuMessage::AppMessage(i, message)))
-         }).into();
+            grid.push(
+               app.view()
+                  .map(move |message| MenuMessage::AppMessage(i, message)),
+            )
+         })
+         .into();
 
       let content = Column::new()
          .spacing(20)
@@ -255,7 +271,12 @@ impl Application for Menu {
 
       Scrollable::new(&mut self.scroll)
          .padding(30)
-         .push(Container::new(content).width(Length::Fill).center_y().center_x())
+         .push(
+            Container::new(content)
+               .width(Length::Fill)
+               .center_y()
+               .center_x(),
+         )
          .into()
    }
 
@@ -270,4 +291,8 @@ impl Application for Menu {
    // fn scale_factor(&self) -> f64 {
    //    self.scale_state.scale as f64
    // }
+}
+#[allow(unused_must_use)]
+fn main() {
+   Menu::init();
 }

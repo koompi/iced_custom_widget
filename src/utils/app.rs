@@ -31,7 +31,10 @@ impl App {
    pub fn view(&mut self) -> Element<AppMessage> {
       let icon = IconBrand::new(self.icon).size(127);
       let name = Text::new(&self.name);
-      let app = Column::new().align_items(Align::Center).push(icon).push(name);
+      let app = Column::new()
+         .align_items(Align::Center)
+         .push(icon)
+         .push(name);
       let container = Container::new(app);
       let app_btn = Button::new(&mut self.clickable, container)
          .padding(10)

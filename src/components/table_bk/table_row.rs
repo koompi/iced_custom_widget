@@ -29,7 +29,6 @@ where
 
     pub fn cells(has_background: bool, cells: Vec<TableCell<'a, Message, Renderer>>) -> Self {
         let cells: Vec<Element<_, _>> = cells.into_iter().map(|cell| cell.into()).collect();
-        
         Self {
             cells,
             width: Length::Shrink,
@@ -198,8 +197,8 @@ where
             background: styling
                 .background
                 .unwrap_or(Background::Color(Color::TRANSPARENT)),
-            border_radius: styling.border_radius,
-            border_width: 0,
+            border_radius: styling.border_radius as f32,
+            border_width: 0 as f32,
             border_color: Color::TRANSPARENT,
         };
         let table_row = Primitive::Group {

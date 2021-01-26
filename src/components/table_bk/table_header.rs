@@ -1,12 +1,12 @@
 use super::table_column::{self, ColumnKey, TableColumn};
 use iced_graphics::{Backend, Primitive};
 use iced_native::{
-    layout::{self, Limits, Node}, event::{self, Event}, mouse, text, 
-    Align, Element, Hasher, Layout, Length, Point, Rectangle, Widget, Clipboard,
+    event::{self, Event},
+    layout::{self, Limits, Node},
+    mouse, text, Align, Clipboard, Element, Hasher, Layout, Length, Point, Rectangle, Widget,
 };
 
-pub struct TableHeader<'a, Message, Renderer: self::Renderer>
-{
+pub struct TableHeader<'a, Message, Renderer: self::Renderer> {
     state: &'a mut State,
     width: Length,
     height: Length,
@@ -22,10 +22,13 @@ where
     Renderer: 'a + self::Renderer + text::Renderer,
     Message: 'a + Clone,
 {
-    pub fn new<Key: ColumnKey>(state: &'a mut State, children: Vec<(String, TableColumn<'a, Message, Renderer, Key>)>) -> Self {
+    pub fn new<Key: ColumnKey>(
+        state: &'a mut State,
+        children: Vec<(String, TableColumn<'a, Message, Renderer, Key>)>,
+    ) -> Self {
         let mut columns = Vec::with_capacity(children.len());
         let mut names = Vec::with_capacity(children.len());
-        for (name,column) in children {
+        for (name, column) in children {
             names.push(name);
             columns.push(column.into());
         }
@@ -38,7 +41,7 @@ where
             leeway: 0,
             columns,
             names,
-            on_resize: None
+            on_resize: None,
         }
     }
 
@@ -67,8 +70,7 @@ where
     }
 }
 
-impl<'a, Message, Renderer> Widget<Message, Renderer>
-    for TableHeader<'a, Message, Renderer>
+impl<'a, Message, Renderer> Widget<Message, Renderer> for TableHeader<'a, Message, Renderer>
 where
     Renderer: 'a + self::Renderer + text::Renderer,
     Message: 'a + Clone,
@@ -91,7 +93,7 @@ where
             0.0,
             self.spacing as f32,
             Align::Start,
-            &self.columns
+            &self.columns,
         )
     }
 
@@ -130,7 +132,6 @@ where
         }
     }
 
-
     fn on_event(
         &mut self,
         event: Event,
@@ -158,7 +159,6 @@ where
                 if !self.state.resizing {
                     self.state.resize_hovering = false;
                 }
-    
                 for (idx, divider) in dividers.iter() {
                     if cursor_position.x > (divider - self.leeway as f32)
                         && cursor_position.x < (divider + self.leeway as f32)
@@ -166,7 +166,6 @@ where
                         if !self.state.resize_hovering {
                             self.state.resizing_idx = *idx;
                         }
-    
                         self.state.resize_hovering = true;
                     }
                 }
