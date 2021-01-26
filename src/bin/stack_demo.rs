@@ -1,9 +1,13 @@
-use crate::components::outline_button::{self, OutlineButton};
-use crate::components::stack::{Overflow, Stack};
-use crate::styles::custom_styles;
-use crate::utils::themes::Theme;
-use iced::{Checkbox, Column, Container, Element, Length, Point, Sandbox, Text, Settings};
-
+// use crate::components::outline_button::{self, OutlineButton};
+// use crate::styles::custom_styles;
+use iced::{Checkbox, Column, Container, Element, Length, Point, Sandbox, Settings, Text};
+use iced_custom_widget as cw;
+// use iced_custom_wdiget::components::stack::{Overflow, Stack};
+use cw::components::{
+   outline_button, outline_button::OutlineButton, stack::Overflow, stack::Stack,
+};
+use cw::styles::custom_styles;
+use cw::utils::themes::Theme;
 #[derive(Debug, Clone)]
 pub enum Message {
    ToggleOverflow(bool),
@@ -45,16 +49,23 @@ impl Sandbox for StackDemo {
 
    fn view(&mut self) -> Element<Self::Message> {
       let overflow_checkbox = Checkbox::new(self.is_overflow, "Overflow", Message::ToggleOverflow)
-         .style(custom_styles::CustomCheckbox::Default(Theme::light().palette));
+         .style(custom_styles::CustomCheckbox::Default(
+            Theme::light().palette,
+         ));
       let container1 = Container::new(Text::new("label1"))
          .width(Length::Units(200))
          .height(Length::Units(100))
-         .style(custom_styles::CustomContainer::BrightBackground(Theme::light().palette));
+         .style(custom_styles::CustomContainer::BrightBackground(
+            Theme::light().palette,
+         ));
       let container2 = Container::new(Text::new("label2"))
          .width(Length::Units(150))
          .height(Length::Units(150))
-         .style(custom_styles::CustomContainer::BrightForeground(Theme::light().palette));
-      let button = OutlineButton::new(&mut self.btn_state, Text::new("Click me!")).on_press(Message::ButtonPressed);
+         .style(custom_styles::CustomContainer::BrightForeground(
+            Theme::light().palette,
+         ));
+      let button = OutlineButton::new(&mut self.btn_state, Text::new("Click me!"))
+         .on_press(Message::ButtonPressed);
       let move_pos = Point::new(20., 30.);
       let stack_content = Stack::new()
          .overflow(Overflow::Clip)
@@ -68,4 +79,8 @@ impl Sandbox for StackDemo {
          .push(button)
          .into()
    }
+}
+#[allow(unused_must_use)]
+fn main() {
+   StackDemo::init();
 }

@@ -1,9 +1,10 @@
-use crate::components::stepper::{self, Stepper};
-use crate::components::card::{self, Card};
-use crate::styles::custom_card::CustomCard;
-use iced::{pick_list, Column, Container, Element, Length, PickList, Sandbox, Text, Settings};
-use std::fmt::{Display, Formatter, Result};
+use iced_custom_widget as cw;
+use cw::components::card::{self, Card};
+use cw::components::stepper::{self, Stepper};
+use cw::styles::custom_card::CustomCard;
+use iced::{pick_list, Column, Container, Element, Length, PickList, Sandbox, Settings, Text};
 use smart_default::SmartDefault;
+use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, SmartDefault)]
 pub enum Language {
@@ -52,7 +53,7 @@ pub struct CardDemo {
    card_state: card::State,
    pick_list: pick_list::State<Language>,
    selected_language: Language,
-   scale_state: ScaleState
+   scale_state: ScaleState,
 }
 
 #[derive(SmartDefault)]
@@ -62,7 +63,6 @@ pub struct ScaleState {
    decrease_btn_state: stepper::State,
    increase_btn_state: stepper::State,
 }
-
 impl CardDemo {
    pub fn init() -> iced::Result {
       CardDemo::run(Settings {
@@ -122,20 +122,16 @@ impl Sandbox for CardDemo {
          .padding(10)
          .on_pressed(Self::Message::OnCardPressed)
          .style(CustomCard::Default);
-      
       let resizer = Stepper::new(
          self.scale_state.scale,
          &mut self.scale_state.decrease_btn_state,
          &mut self.scale_state.increase_btn_state,
          Self::Message::ScaleChanged,
       )
-         .step(0.1)
-         .min(0.5)
-         .max(2.);
-      let col = Column::new()
-         .push(card)
-         .push(resizer)
-         .push(pick_list);
+      .step(0.1)
+      .min(0.5)
+      .max(2.);
+      let col = Column::new().push(card).push(resizer).push(pick_list);
       Container::new(col)
          .width(Length::Fill)
          .height(Length::Fill)
@@ -143,4 +139,8 @@ impl Sandbox for CardDemo {
          .center_y()
          .into()
    }
+}
+#[allow(unused_must_use)]
+fn main() {
+   CardDemo::init(); 
 }
