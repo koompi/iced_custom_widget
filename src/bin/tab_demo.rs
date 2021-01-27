@@ -316,3 +316,38 @@ impl Wire {
             .into()
     }
 }
+#[derive(Default, Debug, Clone)]
+pub struct NetSettings {
+    general: (String, bool),
+    commonip: CommonIp,
+    security: Security,
+    wlan: Wlan,
+}
+enum IP {
+    Ipv4,
+    Ipv6,
+}
+#[derive(Default, Debug, Clone)]
+struct CommonIp {
+    Method: Vec<String>,
+    PrimaryDns: String,
+    SecondaryDns: String,
+}
+#[derive(Default, Debug, Clone)]
+struct Security {
+    Type: Vec<String>,
+    PwdOption: Vec<u8>,
+    Pwd: String,
+}
+#[derive(Default, Debug, Clone)]
+struct Wlan {
+    Ssid: String,
+    DevMacAddr: Option<String>,
+    CustomMtu: bool,
+}
+
+impl NetSettings {
+    fn new() -> Self {
+        Self { ..Self::default() }
+    }
+}
