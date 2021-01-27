@@ -14,15 +14,19 @@ pub struct Event {
     value_toggled: bool,
 }
 pub fn init() {
-    Event::run(Settings::default());
+    match Event::run(Settings::default()) {
+        Ok(exit_code) => println!("exit code: {:?}", exit_code),
+        Err(e) => eprintln!("Error: {:?}", e)
+    }
 }
 #[derive(Debug, Clone)]
 pub enum EventMessage {
     EventOccured(iced_native::Event),
     Toogled(bool),
     TogglerChanged(bool),
+    CloseApp,
+    Escape
 }
-
 impl Application for Event {
     type Executor = executor::Default;
     type Message = EventMessage;
@@ -48,16 +52,40 @@ impl Application for Event {
                 self.value_toggled = is_toggled;
                 println!("You toggled the message: {}", is_toggled);
             }
+            EventMessage::CloseApp  => {
+                println!("Application close");
+            }
+            EventMessage::Escape => {
+                println!("Escape key pressed.")
+            }
         }
 
         Command::none()
     }
     fn subscription(&self) -> Subscription<Self::Message> {
-        if self.enable {
-            iced_native::subscription::events().map(EventMessage::EventOccured)
-        } else {
-            Subscription::none()
-        }
+        iced_native::subscription::events_with(|event, status| {
+            if let iced_native::event::Status::Captured = status {
+                return None;
+            }
+
+            match event {
+                iced_native::Event::Keyboard(iced::keyboard::Event::KeyPressed {
+                    modifiers,
+                    key_code,
+                }) => match key_code {
+                    iced::keyboard::KeyCode::W => {
+                        if modifiers.control {
+                            Some(EventMessage::CloseApp)
+                        } else {
+                            None
+                        }
+                    }
+                    iced::keyboard::KeyCode::Escape => Some(EventMessage::Escape),
+                    _ => None,
+                },
+                _ => None,
+            }
+        })
     }
     fn view(&mut self) -> Element<Self::Message> {
         let event = self

@@ -82,33 +82,35 @@ pub trait StyleSheet {
     fn selected_hovered(&self) -> Style;
 
     fn unselected_hovered(&self) -> Style;
+    fn default_tab(&self, is_indicated: Option<Indicator>) -> Style;
 }
 
-struct Default;
-
+pub struct Default;
 impl StyleSheet for Default {
     fn selected(&self) -> Style {
-        Style {
-            background: None,
-            border_radius: 0.0,
-            border_width: 0.0,
-            border_color: Color::TRANSPARENT,
-            text_color: Color::BLACK,
-            indicator: Some(Indicator::default()),
-        }
+        self.default_tab(None)
     }
-
     fn unselected(&self) -> Style {
         Style {
             text_color: Color::from_rgb(0.34, 0.34, 0.34),
-            indicator: None,
+            // indicator: None,
             ..self.selected()
+        }
+    }
+    fn default_tab(&self, is_indicated: Option<Indicator>) -> Style {
+        Style {
+            background: Some(Background::from(Color::from_rgb8(178, 190, 195))),
+            border_radius: 10.0,
+            border_width: 0.0,
+            border_color: Color::BLACK,
+            text_color: Color::BLACK,
+            indicator: is_indicated,
         }
     }
 
     fn selected_hovered(&self) -> Style {
         Style {
-            background: Some(Background::Color(Color::from_rgba(0.9, 0.9, 0.9, 0.9))),
+            background: Some(Background::Color(Color::from_rgb8(200, 214, 229))),
             ..self.selected()
         }
     }
@@ -140,7 +142,16 @@ impl StyleSheet for StyleDefaultVertical {
             }),
         }
     }
-
+    fn default_tab(&self, is_indicated: Option<Indicator>) -> Style {
+        Style { 
+            background: Some(Background::from(Color::from_rgb8(178, 190, 195))),
+            border_radius: 10.0,
+            border_width: 0.0,
+            border_color: Color::BLACK,
+            text_color: Color::BLACK,
+            indicator: is_indicated,
+        }
+    }
     fn unselected(&self) -> Style {
         Style {
             text_color: Color::from_rgb(0.34, 0.34, 0.34),
