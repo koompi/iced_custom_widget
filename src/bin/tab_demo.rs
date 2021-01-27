@@ -189,7 +189,7 @@ impl Application for TabContent {
             .height(Length::Fill)
             .push(
                 Container::new(row.height(Length::Fill))
-                    .style(ContainerStyle::Custom)
+                    .style(ContainerStyle::White)
                     .width(Length::FillPortion(4))
                     .height(Length::Fill)
                     .padding(15),
@@ -199,7 +199,7 @@ impl Application for TabContent {
                 Container::new(contnet.height(Length::Fill))
                     .width(Length::FillPortion(9))
                     .height(Length::Fill)
-                    .style(ContainerStyle::Custom)
+                    .style(ContainerStyle::White)
                     .padding(20),
             )
             .into();
@@ -208,9 +208,10 @@ impl Application for TabContent {
             .center_x()
             .center_y();
         Container::new(container)
+            .style(ContainerStyle::LightGray)
             .width(Length::Fill)
             .height(Length::Fill)
-            .padding(100)
+            .padding(10)
             .center_x()
             .center_y()
             .into()
@@ -301,7 +302,7 @@ impl Wire {
                     .center_y()
                     .width(Length::Fill)
                     .height(Length::Units(100))
-                    .style(ContainerStyle::InkColor),
+                    .style(ContainerStyle::LightGrayCircle),
             )
             .push(Space::with_height(Length::Fill))
             .push(

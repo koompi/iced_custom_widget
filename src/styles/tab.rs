@@ -99,7 +99,7 @@ impl StyleSheet for Default {
     }
     fn default_tab(&self, is_indicated: Option<Indicator>) -> Style {
         Style {
-            background: Some(Background::from(Color::from_rgb8(178, 190, 195))),
+            background: Some(Background::from(Color::from_rgba8(215, 219, 221, 0.5))),
             border_radius: 10.0,
             border_width: 0.0,
             border_color: Color::BLACK,
@@ -107,17 +107,17 @@ impl StyleSheet for Default {
             indicator: is_indicated,
         }
     }
-
     fn selected_hovered(&self) -> Style {
         Style {
-            background: Some(Background::Color(Color::from_rgb8(200, 214, 229))),
+            background: Some(Background::Color(Color::from_rgba8(86, 101, 115, 1.0))),
+            text_color: Color::WHITE,
             ..self.selected()
         }
     }
 
     fn unselected_hovered(&self) -> Style {
         Style {
-            background: Some(Background::Color(Color::from_rgba(0.9, 0.9, 0.9, 0.9))),
+            background: Some(Background::Color(Color::from_rgba8(189, 195, 199, 1.0))),
             text_color: Color::from_rgb(0.34, 0.34, 0.34),
             indicator: None,
             ..self.selected()
@@ -143,8 +143,8 @@ impl StyleSheet for StyleDefaultVertical {
         }
     }
     fn default_tab(&self, is_indicated: Option<Indicator>) -> Style {
-        Style { 
-            background: Some(Background::from(Color::from_rgb8(178, 190, 195))),
+        Style {
+            background: Some(Background::from(Color::from_rgba8(223, 228, 234, 1.0))),
             border_radius: 10.0,
             border_width: 0.0,
             border_color: Color::BLACK,

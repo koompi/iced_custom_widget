@@ -14,8 +14,9 @@ impl button::StyleSheet for CustomButton {
             ..button::Style::default()
          },
          CustomButton::Circular => button::Style {
-            background: Some(Background::from(Color::from_rgb8(178, 190, 195))),
+            background: Some(Background::from(Color::from_rgb8(86, 101, 115))),
             border_radius: 25.0,
+            text_color: Color::WHITE,
             ..button::Style::default()
          },
       }
@@ -23,7 +24,10 @@ impl button::StyleSheet for CustomButton {
 
    fn hovered(&self) -> button::Style {
       button::Style {
-         background: Some(Background::Color(Color::from_rgba8(0, 0, 0, 0.2))),
+         background: match self {
+            CustomButton::Default => Some(Background::Color(Color::from_rgba8(0, 0, 0, 0.2))),
+            CustomButton::Circular => Some(Background::Color(Color::from_rgba8(44, 62, 80, 1.0))),
+         },
          ..self.active()
       }
    }
