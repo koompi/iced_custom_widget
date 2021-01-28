@@ -16,16 +16,16 @@ impl container::StyleSheet for CustomContainer {
    fn style(&self) -> container::Style {
       container::Style {
          background: Some(Background::Color(match self {
-            Self::BrightForeground(palette) | Self::NormalForeground(palette) | Self::NormalErrorForeground(palette) => {
-               palette.base.foreground
-            }
+            Self::BrightForeground(palette)
+            | Self::NormalForeground(palette)
+            | Self::NormalErrorForeground(palette) => palette.base.foreground,
             Self::FadedNormalForeground(palette) | Self::FadedBrightForeground(palette) => Color {
                a: 0.80,
                ..palette.base.foreground
             },
-            Self::NormalBackground(palette) | Self::BrightBackground(palette) | Self::NormalErrorBackground(palette) => {
-               palette.base.background
-            }
+            Self::NormalBackground(palette)
+            | Self::BrightBackground(palette)
+            | Self::NormalErrorBackground(palette) => palette.base.background,
             Self::Segmented(_) => match container::Style::default()
                .background
                .unwrap_or(Background::Color(Color::TRANSPARENT))
@@ -39,10 +39,12 @@ impl container::StyleSheet for CustomContainer {
             | Self::FadedNormalForeground(palette)
             | Self::NormalErrorForeground(palette)
             | Self::NormalErrorBackground(palette) => palette.normal.surface,
-            Self::BrightForeground(palette) | Self::BrightBackground(palette) | Self::FadedBrightForeground(palette) => {
-               palette.bright.surface
-            }
-            Self::Segmented(_) => container::Style::default().text_color.unwrap_or(Color::BLACK),
+            Self::BrightForeground(palette)
+            | Self::BrightBackground(palette)
+            | Self::FadedBrightForeground(palette) => palette.bright.surface,
+            Self::Segmented(_) => container::Style::default()
+               .text_color
+               .unwrap_or(Color::BLACK),
          }),
          // border_radius: match self {
          //    Self::Segmented(_) => 4.0,
@@ -135,13 +137,19 @@ impl button::StyleSheet for CustomButton {
             Self::Disabled(_) => self.active().text_color,
          },
          background: Some(Background::Color(match self {
-            Self::Default(palette) | Self::DefaultBoxed(palette) | Self::Selected(palette) => palette.normal.primary,
+            Self::Default(palette) | Self::DefaultBoxed(palette) | Self::Selected(palette) => {
+               palette.normal.primary
+            }
             Self::Secondary(palette) | Self::SecondaryBoxed(palette) => palette.normal.secondary,
             Self::DefaultDelete(palette) => Color {
                a: 0.35,
                ..palette.normal.error
             },
-            Self::Disabled(_) => match self.active().background.unwrap_or(Background::Color(Color::TRANSPARENT)) {
+            Self::Disabled(_) => match self
+               .active()
+               .background
+               .unwrap_or(Background::Color(Color::TRANSPARENT))
+            {
                Background::Color(color) => color,
             },
             _ => Color::TRANSPARENT,
@@ -187,7 +195,11 @@ impl button::StyleSheet for CustomButton {
                ..palette.normal.secondary
             },
             Self::BrightText(_) | Self::SelectedBrightText(_) | Self::DefaultDelete(_) => {
-               match self.active().background.unwrap_or(Background::Color(Color::TRANSPARENT)) {
+               match self
+                  .active()
+                  .background
+                  .unwrap_or(Background::Color(Color::TRANSPARENT))
+               {
                   Background::Color(color) => Color {
                      a: color.a * 0.5,
                      ..color
@@ -195,7 +207,11 @@ impl button::StyleSheet for CustomButton {
                }
             }
             Self::Default(_) | Self::Disabled(_) | Self::Selected(_) => {
-               match self.active().background.unwrap_or(Background::Color(Color::TRANSPARENT)) {
+               match self
+                  .active()
+                  .background
+                  .unwrap_or(Background::Color(Color::TRANSPARENT))
+               {
                   Background::Color(color) => color,
                }
             }
@@ -261,7 +277,9 @@ impl pick_list::StyleSheet for CustomPicklist {
             Self::Default(palette) | Self::Secondary(palette) => palette.bright.surface,
          },
          background: match self {
-            Self::Default(palette) | Self::Secondary(palette) => Background::Color(palette.base.background),
+            Self::Default(palette) | Self::Secondary(palette) => {
+               Background::Color(palette.base.background)
+            }
          },
          border_width: 1.0,
          border_color: match self {
@@ -359,7 +377,6 @@ pub enum CustomTextInput {
    Secondary(ColorPalette),
    Error(ColorPalette),
 }
-
 impl text_input::StyleSheet for CustomTextInput {
    fn active(&self) -> text_input::Style {
       text_input::Style {
@@ -399,19 +416,25 @@ impl text_input::StyleSheet for CustomTextInput {
 
    fn placeholder_color(&self) -> Color {
       match self {
-         Self::Default(palette) | Self::Secondary(palette) | Self::Error(palette) => palette.normal.surface,
+         Self::Default(palette) | Self::Secondary(palette) | Self::Error(palette) => {
+            palette.normal.surface
+         }
       }
    }
 
    fn value_color(&self) -> Color {
       match self {
-         Self::Default(palette) | Self::Secondary(palette) | Self::Error(palette) => palette.bright.primary,
+         Self::Default(palette) | Self::Secondary(palette) | Self::Error(palette) => {
+            palette.bright.primary
+         }
       }
    }
 
    fn selection_color(&self) -> Color {
       match self {
-         Self::Default(palette) | Self::Secondary(palette) | Self::Error(palette) => palette.bright.secondary,
+         Self::Default(palette) | Self::Secondary(palette) | Self::Error(palette) => {
+            palette.bright.secondary
+         }
       }
    }
 

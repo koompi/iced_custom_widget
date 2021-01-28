@@ -166,7 +166,6 @@ where
             }
             _ => event::Status::Ignored,
         };
-
         status
     }
     fn draw(
