@@ -1,7 +1,7 @@
 use iced::{
     button, executor, pick_list, scrollable, text_input, Align, Application, Button, Column,
-    Command, Container, Element, Length, PickList, Row, Rule, Scrollable, Settings, Space, Text,
-    TextInput,
+    Command, Container, Element, HorizontalAlignment, Length, PickList, Row, Rule, Scrollable,
+    Settings, Space, Text, TextInput, VerticalAlignment,
 };
 use iced_custom_widget as icw;
 use icw::components::Icon;
@@ -16,25 +16,32 @@ use std::fmt;
 fn main() {
     init();
 }
-#[derive(Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct TabContent {
     choice: Choice,
     wireless: Wireless,
     wire: Wire,
     network: NetSettings,
     is_active: bool,
+    scroll_content: scrollable::State,
+    save_btn: button::State,
+    cancel_btn: button::State,
+    btn_state: ButtonState,
 }
-impl Default for TabContent {
-    fn default() -> Self {
-        Self {
-            choice: Choice::A,
-            wireless: Wireless::default(),
-            wire: Wire::new(),
-            network: NetSettings::new(),
-            is_active: false,
-        }
-    }
-}
+// impl Default for TabContent {
+//     fn default() -> Self {
+//         Self {
+//             choice: Choice::A,
+//             wireless: Wireless::default(),
+//             wire: Wire::new(),
+//             network: NetSettings::new(),
+//             is_active: false,
+//             scroll_content: scrollable::State::new(),
+//             save_btn: button::State::new(),
+//             cancel_btn,
+//         }
+//     }
+// }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Choice {
     A,
@@ -46,6 +53,21 @@ pub enum Choice {
     G,
     H,
 }
+impl Default for Choice {
+    fn default() -> Self {
+        Choice::A
+    }
+}
+#[derive(Debug, Clone)]
+pub enum ButtonState {
+    Disable,
+    Enable,
+}
+impl Default for ButtonState {
+    fn default() -> Self {
+        ButtonState::Disable
+    }
+}
 #[derive(Debug, Clone)]
 pub enum AppMessage {
     TabSelect(Choice),
@@ -53,6 +75,8 @@ pub enum AppMessage {
     WireMsg(WireMsg),
     ToggleChange(bool),
     NetSettingsMsg(NetSettingsMsg),
+    OnSave,
+    OnCancel,
 }
 
 impl Application for TabContent {
@@ -89,6 +113,8 @@ impl Application for TabContent {
                 self.network.update(msg);
                 Command::none()
             }
+            AppMessage::OnSave => Command::none(),
+            AppMessage::OnCancel => Command::none(),
         }
     }
     fn view(&mut self) -> Element<Self::Message> {
@@ -179,7 +205,6 @@ impl Application for TabContent {
         let contnet = Column::new()
             .height(Length::Fill)
             .align_items(Align::Center)
-            .padding(10)
             .push(match self.choice {
                 Choice::A => self.wire.view().map(move |msg| AppMessage::WireMsg(msg)),
                 Choice::B => self
@@ -195,24 +220,76 @@ impl Application for TabContent {
                 Choice::G => Text::new("Content G").into(),
                 Choice::E => Text::new("Content E").into(),
                 Choice::H => Text::new("Content H").into(),
-            });
+            })
+            .push(
+                Row::new()
+                    .width(Length::Fill)
+                    .spacing(4)
+                    .padding(6)
+                    .align_items(Align::Center)
+                    .push(match self.btn_state {
+                        ButtonState::Enable => Button::new(
+                            &mut self.cancel_btn,
+                            Text::new("Cancel")
+                                .vertical_alignment(VerticalAlignment::Center)
+                                .horizontal_alignment(HorizontalAlignment::Center),
+                        )
+                        .width(Length::Fill)
+                        .padding(6)
+                        .style(ButtonStyle::BigCircular(86, 101, 115, 1.0))
+                        .on_press(AppMessage::OnCancel),
+                        ButtonState::Disable => Button::new(
+                            &mut self.cancel_btn,
+                            Text::new("Cancel")
+                                .vertical_alignment(VerticalAlignment::Center)
+                                .horizontal_alignment(HorizontalAlignment::Center),
+                        )
+                        .width(Length::Fill)
+                        .padding(6)
+                        .style(ButtonStyle::BigCircular(86, 101, 115, 1.0)),
+                    })
+                    .push(match self.btn_state {
+                        ButtonState::Enable => Button::new(
+                            &mut self.save_btn,
+                            Text::new("Save")
+                                .vertical_alignment(VerticalAlignment::Center)
+                                .horizontal_alignment(HorizontalAlignment::Center),
+                        )
+                        .width(Length::Fill)
+                        .padding(6)
+                        .style(ButtonStyle::BigCircular(86, 101, 115, 1.0))
+                        .on_press(AppMessage::OnSave),
+                        ButtonState::Disable => Button::new(
+                            &mut self.save_btn,
+                            Text::new("Save")
+                                .vertical_alignment(VerticalAlignment::Center)
+                                .horizontal_alignment(HorizontalAlignment::Center),
+                        )
+                        .width(Length::Fill)
+                        .padding(6)
+                        .style(ButtonStyle::BigCircular(86, 101, 115, 1.0)),
+                    }),
+            );
+        let netsidebar_scroll = Scrollable::new(&mut self.scroll_content)
+            .push(row)
+            .padding(10)
+            .scrollbar_width(4)
+            .scroller_width(4);
         let whole_content: Element<_> = Row::new()
             .width(Length::Fill)
             .height(Length::Fill)
             .push(
-                Container::new(row.height(Length::Fill))
+                Container::new(netsidebar_scroll.height(Length::Fill))
                     .style(ContainerStyle::White)
                     .width(Length::FillPortion(4))
-                    .height(Length::Fill)
-                    .padding(15),
+                    .height(Length::Fill),
             )
             .push(Rule::vertical(10))
             .push(
                 Container::new(contnet.height(Length::Fill))
                     .width(Length::FillPortion(9))
                     .height(Length::Fill)
-                    .style(ContainerStyle::White)
-                    .padding(20),
+                    .style(ContainerStyle::White), // .padding(10),
             )
             .into();
         let container = Container::new(whole_content)
@@ -223,7 +300,6 @@ impl Application for TabContent {
             .style(ContainerStyle::LightGray)
             .width(Length::Fill)
             .height(Length::Fill)
-            .padding(10)
             .center_x()
             .center_y()
             .into()
@@ -243,7 +319,7 @@ pub fn init() {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct Wireless {
     is_active: bool,
     status: String,
@@ -318,7 +394,7 @@ impl Wire {
             .push(Space::with_height(Length::Fill))
             .push(
                 Button::new(&mut self.add_net_con, Icon::new('\u{f067}').size(24))
-                    .style(ButtonStyle::BigCircular)
+                    .style(ButtonStyle::BigCircular(86, 101, 115, 1.0))
                     .padding(10)
                     .width(Length::Units(50))
                     .height(Length::Units(50))
@@ -578,6 +654,21 @@ impl NetSettings {
             NetSettingsMsg::EAPAuthChanged(eapauth) => {
                 self.selected_eapauth = eapauth;
             }
+            NetSettingsMsg::IdentityChanged(identity) => {
+                self.identity_val = identity;
+            }
+            NetSettingsMsg::PrivatePwdChanged(ppwd) => {
+                self.private_pwd_val = ppwd;
+            }
+            NetSettingsMsg::PrivateKeyChanged(pkey) => {
+                self.private_key_val = pkey;
+            }
+            NetSettingsMsg::CaCertChanged(cacert) => {
+                self.ca_cert_val = cacert;
+            }
+            NetSettingsMsg::UserCertChanged(usercert) => {
+                self.user_cert_val = usercert;
+            }
             _ => {}
         }
     }
@@ -739,7 +830,7 @@ impl NetSettings {
                                                         '\u{f070}'
                                                     }),
                                                 )
-                                                .style(ButtonStyle::Circular)
+                                                .style(ButtonStyle::Circular(86, 101, 115, 1.0))
                                                 .on_press(NetSettingsMsg::ToggleShownPasswd),
                                             ),
                                     )
@@ -828,7 +919,7 @@ impl NetSettings {
                                                         '\u{f070}'
                                                     }),
                                                 )
-                                                .style(ButtonStyle::Circular)
+                                                .style(ButtonStyle::Circular(65, 203, 126, 1.0))
                                                 .on_press(NetSettingsMsg::ToggleShownPasswd),
                                             ),
                                     ),
@@ -920,7 +1011,7 @@ impl NetSettings {
                                             })
                                             .push(
                                                 Button::new(
-                                                    &mut self.private_pwd_file,
+                                                    private_pwd_file,
                                                     Icon::new(if self.is_shown_private_key {
                                                         '\u{f06e}'
                                                     } else {
@@ -954,7 +1045,7 @@ impl NetSettings {
                                                     Icon::new('\u{f0c6}'),
                                                 )
                                                 .on_press(NetSettingsMsg::OpenFile1)
-                                                .style(ButtonStyle::Circular),
+                                                .style(ButtonStyle::Circular(86, 101, 115, 1.0)),
                                             ),
                                     )
                                     .push(
@@ -978,7 +1069,9 @@ impl NetSettings {
                                             .push(
                                                 Button::new(ca_cert_file, Icon::new('\u{f0c6}'))
                                                     .on_press(NetSettingsMsg::OpenFile2)
-                                                    .style(ButtonStyle::Circular),
+                                                    .style(ButtonStyle::Circular(
+                                                        86, 101, 115, 1.0,
+                                                    )),
                                             ),
                                     )
                                     .push(
@@ -1002,7 +1095,9 @@ impl NetSettings {
                                             .push(
                                                 Button::new(user_cert_file, Icon::new('\u{f0c6}'))
                                                     .on_press(NetSettingsMsg::OpenFile3)
-                                                    .style(ButtonStyle::Circular),
+                                                    .style(ButtonStyle::Circular(
+                                                        86, 101, 115, 1.0,
+                                                    )),
                                             ),
                                     ),
                             )
@@ -1012,13 +1107,18 @@ impl NetSettings {
                 .style(ContainerStyle::LightGrayCircle)
                 .width(Length::Fill),
             );
-        // let ipv4 = Container::new(Column::new().push(child: E))
+        // let ipv4 = Container::new(Column::new().push());
         let network_scroll =
             Scrollable::new(net_settings_scrolls).push(net_layout.push(general).push(security));
-        Container::new(network_scroll)
-            .center_x()
-            .width(Length::Fill)
-            .height(Length::Fill)
-            .into()
+        Container::new(
+            network_scroll
+                .padding(20)
+                .scroller_width(4)
+                .scrollbar_width(4),
+        )
+        .center_x()
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .into()
     }
 }

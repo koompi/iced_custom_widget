@@ -1,5 +1,5 @@
-use iced_native::{Background, Color};
 use super::table_row;
+use iced_native::{Background, Color};
 
 pub struct Style {
    pub table_row: table_row::Style,
@@ -35,10 +35,7 @@ pub trait StyleSheet {
 
       Style {
          header_background: match active.header_background {
-            Background::Color(color) => Background::Color(Color {
-               a: 1.0,
-               ..color
-            })
+            Background::Color(color) => Background::Color(Color { a: 1.0, ..color }),
          },
          ..active
       }
