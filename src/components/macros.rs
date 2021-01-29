@@ -9,7 +9,7 @@ macro_rules! table_column {
       }
    }};
    ($a:expr, $b:expr) => {{
-      $crate::components::table::TableColumn {
+      $icw::components::table::TableColumn {
          name: $a.to_string(),
          label: Some($b.to_string()),
          short_name: Some($a.to_string()),

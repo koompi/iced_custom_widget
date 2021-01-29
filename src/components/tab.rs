@@ -262,7 +262,7 @@ where
             }
         } else {
             if is_selected {
-                style_sheet.selected()
+                style_sheet.selected_hovered()
             } else {
                 style_sheet.unselected()
             }

@@ -166,7 +166,6 @@ where
             }
             _ => event::Status::Ignored,
         };
-
         status
     }
     fn draw(
@@ -282,6 +281,7 @@ mod graphics {
     use iced_graphics::{Primitive, Renderer};
     use iced_native::mouse;
     use iced_native::Rectangle;
+    use iced_native::{Background, Color};
     impl<B> toggler::Renderer for Renderer<B>
     where
         B: Backend + backend::Text,
@@ -329,7 +329,7 @@ mod graphics {
             };
             let toggler_foreground = Primitive::Quad {
                 bounds: toggler_foreground_bounds,
-                background: style.foreground.into(),
+                background: Background::from(Color::from_rgb8(87, 101, 116)),
                 border_radius: border_radius as f32,
                 border_width: 1.,
                 border_color: style.foreground_border.unwrap_or(style.foreground),

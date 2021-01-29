@@ -16,16 +16,19 @@ pub trait StyleSheet {
     fn hovered(&self, is_active: bool) -> Style;
 }
 
-struct Default;
+enum ToggleStyle {
+    Default,
+    SelectStyle
+}
 
-impl StyleSheet for Default {
+impl StyleSheet for ToggleStyle {
     fn active(&self, is_active: bool) -> Style {
         Style {
             background: if is_active {
                 Color::from_rgb(0.0, 1.0, 0.0)
             } else {
-                // Color::from_rgb(0.7, 0.7, 0.7)
-                Color::BLACK
+                Color::from_rgb(0.7, 0.7, 0.7)
+                // Color::BLACK
             },
             background_border: None,
             foreground: Color::WHITE,
@@ -43,7 +46,7 @@ impl StyleSheet for Default {
 
 impl std::default::Default for Box<dyn StyleSheet> {
     fn default() -> Self {
-        Box::new(Default)
+        Box::new(ToggleStyle::Default)
     }
 }
 
