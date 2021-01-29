@@ -1648,7 +1648,7 @@ impl NetSettings {
                         .width(Length::Fill)
                         .padding(6)
                         .style(ButtonStyle::BigCircular(86, 101, 115, 1.0)),
-                    })`,
+                    }),
             );
         Container::new(whole_settings)
             .width(Length::Fill)
