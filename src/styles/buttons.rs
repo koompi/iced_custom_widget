@@ -6,6 +6,7 @@ pub enum ButtonStyle {
     Default,
     Circular(u8, u8, u8, f32),
     BigCircular(u8, u8, u8, f32),
+    Transparent,
 }
 
 impl StyleSheet for ButtonStyle {
@@ -17,14 +18,21 @@ impl StyleSheet for ButtonStyle {
                 ButtonStyle::Circular(c1, c2, c3, p) | ButtonStyle::BigCircular(c1, c2, c3, p) => {
                     Some(Background::Color(Color::from_rgba8(*c1, *c2, *c3, *p)))
                 }
+                ButtonStyle::Transparent => Some(Background::Color(Color::TRANSPARENT)),
             },
             border_radius: match self {
                 ButtonStyle::Default | ButtonStyle::Circular(_, _, _, _) => 4.0,
                 ButtonStyle::BigCircular(_, _, _, _) => 25.0,
+                ButtonStyle::Transparent => 0.0,
             },
             border_width: 0.0,
             border_color: [0.7, 0.7, 0.7].into(),
-            text_color: Color::WHITE,
+            text_color: match self {
+                ButtonStyle::Default
+                | ButtonStyle::BigCircular(_, _, _, _)
+                | ButtonStyle::Circular(_, _, _, _) => Color::WHITE,
+                ButtonStyle::Transparent => Color::BLACK,
+            },
         }
     }
 }
