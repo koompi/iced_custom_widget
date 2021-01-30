@@ -7,6 +7,7 @@ pub enum ContainerStyle {
     LightGray,
     White,
     LightGrayCircle,
+    Black,
 }
 impl StyleSheet for ContainerStyle {
     fn style(&self) -> iced::container::Style {
@@ -28,12 +29,14 @@ impl StyleSheet for ContainerStyle {
                 ContainerStyle::LightGrayCircle => {
                     Some(Background::from(Color::from_rgba8(215, 219, 221, 0.5)))
                 }
+                ContainerStyle::Black => Some(Background::from(Color::BLACK)),
             },
             border_radius: match self {
                 ContainerStyle::Custom
                 | ContainerStyle::LightGrayCircle
                 | ContainerStyle::White
-                | ContainerStyle::InkColor => 10.0,
+                | ContainerStyle::InkColor
+                | ContainerStyle::Black => 10.0,
                 ContainerStyle::LightGray => 0.0,
             },
             border_width: 0.0,
