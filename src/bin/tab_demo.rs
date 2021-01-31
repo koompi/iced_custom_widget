@@ -17,7 +17,7 @@ fn main() {
     init();
 }
 #[derive(Default, Debug, Clone)]
-pub struct TabContent {
+pub struct Network {
     choice: Choice,
     wireless: Wireless,
     wire: Wire,
@@ -51,7 +51,7 @@ pub enum AppMessage {
     NetSettingsMsg(NetSettingsMsg),
 }
 
-impl Application for TabContent {
+impl Application for Network {
     type Executor = executor::Default;
     type Flags = ();
     type Message = AppMessage;
@@ -59,7 +59,7 @@ impl Application for TabContent {
     fn title(&self) -> String {
         String::from("GridView Applicaiton ")
     }
-    fn new(_flags: ()) -> (TabContent, Command<AppMessage>) {
+    fn new(_flags: ()) -> (Network, Command<AppMessage>) {
         (
             Self {
                 network: NetSettings::new(),
@@ -243,7 +243,7 @@ fn tab_content(unicode: char, name: &str) -> Row<'static, AppMessage> {
         .spacing(8)
 }
 pub fn init() {
-    match TabContent::run(Settings::default()) {
+    match Network::run(Settings::default()) {
         Ok(val) => println!("run success with exit code: {:?}", val),
         Err(e) => eprintln!("Error: {}", e),
     }
