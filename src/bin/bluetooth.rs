@@ -1,9 +1,11 @@
 use iced::{
-    button, checkbox, executor, scrollable, text_input, Align, Application, Button, Checkbox,
-    Column, Command, Container, Element, HorizontalAlignment, Length, Row, Rule, Scrollable,
-    Settings, Space, Subscription, Text, TextInput, VerticalAlignment,
+    button, executor, scrollable, text_input, Align, Application, Button, Checkbox, Column,
+    Command, Container, Element, HorizontalAlignment, Length, Row, Rule, Scrollable, Settings,
+    Space, Subscription, Text, TextInput, VerticalAlignment,
 };
 use iced_custom_widget as icw;
+use iced_native::window::Event;
+use iced_native::Event::Window;
 use icw::components::{Icon, Toggler};
 use icw::styles::{
     buttons::ButtonStyle, containers::ContainerStyle, rules::RuleStyle, text_input::InputStyle,
@@ -13,10 +15,12 @@ pub struct KBleutooth {
     is_enable: bool,
     is_allowed: bool,
     is_shown: bool,
+    is_input: bool,
     is_shown_settings: bool,
     edit_dev: button::State,
     show_settings: button::State,
     refresh: button::State,
+    device_name: String,
     dev_name: text_input::State,
     dev_name_val: String,
     bluetooth_settings: BluetoothSettings,
@@ -48,6 +52,7 @@ impl Default for BluetoothDevType {
 pub enum KBleutoothMsg {
     DevEdited,
     DevEditedVal(String),
+    DevEditedSubmmit,
     DevEnabled(bool),
     DevAllowed(bool),
     DevRefreshed,
@@ -56,6 +61,8 @@ pub enum KBleutoothMsg {
     CloseApp,
     Escape,
     BluetoothSettingsMsg(BluetoothSettingsMsg),
+    WindowResize((u32, u32)),
+    FileDrop(std::path::PathBuf),
 }
 
 impl Application for KBleutooth {
@@ -78,6 +85,8 @@ impl Application for KBleutooth {
         (
             Self {
                 vector_bluetooths: init_vec_state,
+                is_input: false,
+                device_name: "sna-koompi".to_string(),
                 bluetooth_settings: BluetoothSettings::new(),
                 ..KBleutooth::default()
             },
@@ -87,7 +96,7 @@ impl Application for KBleutooth {
     fn title(&self) -> String {
         String::from("Bluetooth")
     }
-    fn update(&mut self, message: KBleutoothMsg) -> Command<KBleutoothMsg> {
+    fn update(&mut self, message: KBleutoothMsg) -> Command<Self::Message> {
         use KBleutoothMsg::*;
         match message {
             DevEnabled(is_enable) => {
@@ -110,10 +119,35 @@ impl Application for KBleutooth {
                 self.bluetooth_settings.update(msg);
                 Command::none()
             }
+            DevEditedSubmmit => {
+                self.is_input = !self.is_input;
+                self.device_name = self.dev_name_val.to_string();
+                Command::none()
+            }
             DevSettingsShown => {
                 self.is_shown_settings = !self.is_shown_settings;
                 Command::none()
             }
+            DevEdited => {
+                self.is_input = !self.is_input;
+                Command::none()
+            }
+            DevEditedVal(val) => {
+                self.dev_name_val = val;
+                Command::none()
+            }
+            WindowResize((w, h)) => {
+                println!("width: {} & height: {}", w, h);
+                if w <= 603 {
+                } else {
+                }
+                Command::none()
+            }
+            FileDrop(path) => {
+                println!("path: {:?}", path.as_path());
+                Command::none()
+            }
+
             Escape => {
                 println!("Escape key pressed: ");
                 self.is_shown_settings = !self.is_shown_settings;
@@ -129,6 +163,10 @@ impl Application for KBleutooth {
             }
 
             match event {
+                Window(Event::FileDropped(path)) => Some(KBleutoothMsg::FileDrop(path)),
+                Window(Event::Resized { width, height }) => {
+                    Some(KBleutoothMsg::WindowResize((width, height)))
+                }
                 iced_native::Event::Keyboard(iced::keyboard::Event::KeyPressed {
                     modifiers,
                     key_code,
@@ -156,15 +194,38 @@ impl Application for KBleutooth {
                     Row::new()
                         .push(
                             Row::new()
+                                .width(Length::FillPortion(1))
+                                .align_items(Align::Center)
                                 .spacing(4)
-                                .push(Text::new("sna-dell"))
-                                .push(Icon::new('\u{f304}')),
+                                .push(Text::new(&self.device_name))
+                                .push(if self.is_input {
+                                    Row::new().push(
+                                        TextInput::new(
+                                            &mut self.dev_name,
+                                            "",
+                                            &self.dev_name_val,
+                                            KBleutoothMsg::DevEditedVal,
+                                        )
+                                        .on_submit(KBleutoothMsg::DevEditedSubmmit)
+                                        .padding(6)
+                                        .style(InputStyle::InkBorder),
+                                    )
+                                } else {
+                                    Row::new().push(
+                                        Button::new(&mut self.edit_dev, Icon::new('\u{f304}'))
+                                            .on_press(KBleutoothMsg::DevEdited)
+                                            .style(ButtonStyle::Transparent),
+                                    )
+                                }),
                         )
-                        .push(Toggler::new(
-                            self.is_enable,
-                            String::from(""),
-                            KBleutoothMsg::DevEnabled,
-                        )),
+                        .push(
+                            Toggler::new(
+                                self.is_enable,
+                                String::from(""),
+                                KBleutoothMsg::DevEnabled,
+                            )
+                            .width(Length::FillPortion(1)),
+                        ),
                 )
                 .push(Rule::horizontal(10).style(RuleStyle {}))
                 .push(if self.is_enable {
@@ -196,17 +257,20 @@ impl Application for KBleutooth {
                     .height(Length::Shrink)
                     .push(
                         Row::new()
-                            .align_items(Align::Center)
                             .spacing(6)
                             .push(Icon::new('\u{f10b}'))
                             .push(Text::new("Linux"))
                             .push(Space::with_width(Length::Fill))
                             .push(
-                                Row::new().spacing(4).push(Text::new("Not Connected")).push(
-                                    Button::new(&mut self.show_settings, Icon::new('\u{f105}'))
-                                        .on_press(KBleutoothMsg::DevSettingsShown)
-                                        .style(ButtonStyle::Circular(86, 101, 115, 1.0)),
-                                ),
+                                Row::new()
+                                    .align_items(Align::Center)
+                                    .spacing(4)
+                                    .push(Text::new("Not Connected"))
+                                    .push(
+                                        Button::new(&mut self.show_settings, Icon::new('\u{f105}'))
+                                            .on_press(KBleutoothMsg::DevSettingsShown)
+                                            .style(ButtonStyle::Circular(86, 101, 115, 1.0)),
+                                    ),
                             ),
                     ),
             );
@@ -261,8 +325,11 @@ impl Application for KBleutooth {
                 Column::new()
                     .spacing(20)
                     .push(inner_layout)
-                    .push(know_devices)
-                    .push(other_devices),
+                    .push(if self.is_enable {
+                        Column::new().push(know_devices).push(other_devices)
+                    } else {
+                        Column::new()
+                    }),
             );
         let embbeded_layout = Row::new()
             .width(Length::Fill)
@@ -282,8 +349,6 @@ impl Application for KBleutooth {
             });
         let inner_container = Container::new(embbeded_layout)
             .style(ContainerStyle::White)
-            .width(Length::Fill)
-            .height(Length::Fill)
             .padding(10);
         Container::new(inner_container)
             .padding(10)
@@ -305,7 +370,7 @@ pub struct BluetoothSettings {
 }
 #[derive(Debug, Clone)]
 pub enum BluetoothSettingsMsg {
-    HostNameChanged(String),
+    BluetothNameChanged(String),
     Disconnected,
     Ignoranced,
     SendFile,
@@ -321,25 +386,24 @@ impl BluetoothSettings {
         }
     }
     fn update(&mut self, msg: BluetoothSettingsMsg) {
-        use BluetoothSettingsMsg::*;
         match msg {
-            HostNameChanged(val) => self.connected_host_val = val,
-            Disconnected => {}
-            Ignoranced => {}
-            SendFile => {}
-            HideSettings => {}
-            SubmitChanged => {}
+            BluetoothSettingsMsg::BluetothNameChanged(val) => {
+                self.connected_host_val = val;
+            }
+            BluetoothSettingsMsg::Disconnected => {}
+            BluetoothSettingsMsg::Ignoranced => {}
+            BluetoothSettingsMsg::SendFile => {}
+            BluetoothSettingsMsg::HideSettings => {}
+            BluetoothSettingsMsg::SubmitChanged => {
+                println!("data submit");
+            }
         }
     }
     fn view(&mut self) -> Element<BluetoothSettingsMsg> {
-        let BluetoothSettings {
-            connected_host,
-            connected_host_val,
-            ..
-        } = self;
         let blue_settings_layout = Column::new()
             .spacing(10)
             .padding(10)
+            .height(Length::Fill)
             .push(
                 Button::new(&mut self.hide_btn, Icon::new('\u{f104}'))
                     .on_press(BluetoothSettingsMsg::HideSettings)
@@ -353,14 +417,12 @@ impl BluetoothSettings {
             )
             .push(
                 TextInput::new(
-                    connected_host,
-                    connected_host_val,
+                    &mut self.connected_host,
+                    &self.connected_host_val,
                     "",
-                    BluetoothSettingsMsg::HostNameChanged,
+                    BluetoothSettingsMsg::BluetothNameChanged,
                 )
                 .on_submit(BluetoothSettingsMsg::SubmitChanged)
-                .size(16)
-                .width(Length::FillPortion(1))
                 .padding(6)
                 .style(InputStyle::InkBorder),
             )
@@ -399,14 +461,12 @@ impl BluetoothSettings {
                 .width(Length::Fill)
                 .style(ButtonStyle::Circular(86, 101, 115, 1.0))
                 .on_press(BluetoothSettingsMsg::SendFile),
-            )
-            .width(Length::Fill)
-            .height(Length::Fill);
+            );
         Container::new(blue_settings_layout)
             .center_x()
             .center_y()
             .width(Length::FillPortion(1))
-            .height(Length::Fill)
+            .style(ContainerStyle::LightGrayCircle)
             .into()
     }
 }
