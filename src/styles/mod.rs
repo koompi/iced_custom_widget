@@ -6,6 +6,7 @@ pub mod custom_card;
 pub mod custom_styles;
 pub mod outline_button;
 pub mod pick_list;
+pub mod progressbar;
 pub mod rules;
 pub mod stepper;
 pub mod tab;
