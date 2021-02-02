@@ -1,16 +1,13 @@
+#![allow(dead_code)]
 use iced::{
-    button, executor, scrollable, slider, text_input, window, Align, Application, Button, Checkbox,
-    Color, Column, Command, Container, Element, HorizontalAlignment, Length, ProgressBar, Row,
-    Rule, Scrollable, Settings, Slider, Space, Subscription, Text, TextInput, VerticalAlignment,
+    button, executor, slider, window, Align, Application, Button, Color, Column, Command,
+    Container, Element, Length, ProgressBar, Row, Settings, Slider, Space, Subscription, Text,
 };
 use iced_custom_widget as icw;
 use iced_native::window::Event;
 use iced_native::Event::Window;
-use icw::components::{Icon, Toggler};
-use icw::styles::{
-    buttons::ButtonStyle, containers::ContainerStyle, progressbar::SliderStyle, rules::RuleStyle,
-    text_input::InputStyle,
-};
+use icw::components::Icon;
+use icw::styles::{buttons::ButtonStyle, containers::ContainerStyle, progressbar::SliderStyle};
 use std::ops::Index;
 
 use std::collections::HashMap;
@@ -63,6 +60,7 @@ pub struct Music<'a> {
     m_published: &'a str,
     m_index: u32,
 }
+
 impl<'a> Music<'a> {
     fn new(name: &'a str, song: &'a str, published: &'a str) -> Self {
         Self {

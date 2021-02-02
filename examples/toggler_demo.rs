@@ -1,12 +1,12 @@
 fn main() {
     init();
 }
-use iced_custom_widget as icw;
-use icw::components::Toggler;
 use iced::{
     executor, window, Align, Application, Checkbox, Color, Column, Command, Container, Element,
     Length, Settings, Subscription, Text,
 };
+use iced_custom_widget as icw;
+use icw::components::Toggler;
 #[derive(Default, Debug)]
 pub struct Event {
     last: Vec<iced_native::Event>,
@@ -16,7 +16,7 @@ pub struct Event {
 pub fn init() {
     match Event::run(Settings::default()) {
         Ok(exit_code) => println!("exit code: {:?}", exit_code),
-        Err(e) => eprintln!("Error: {:?}", e)
+        Err(e) => eprintln!("Error: {:?}", e),
     }
 }
 #[derive(Debug, Clone)]
@@ -25,7 +25,7 @@ pub enum EventMessage {
     Toogled(bool),
     TogglerChanged(bool),
     CloseApp,
-    Escape
+    Escape,
 }
 impl Application for Event {
     type Executor = executor::Default;
@@ -52,7 +52,7 @@ impl Application for Event {
                 self.value_toggled = is_toggled;
                 println!("You toggled the message: {}", is_toggled);
             }
-            EventMessage::CloseApp  => {
+            EventMessage::CloseApp => {
                 println!("Application close");
             }
             EventMessage::Escape => {
@@ -136,5 +136,3 @@ impl Application for Event {
         1.0
     }
 }
-
-

@@ -8,6 +8,7 @@ pub mod outline_button;
 pub mod pick_list;
 pub mod progressbar;
 pub mod rules;
+pub mod slider;
 pub mod stepper;
 pub mod tab;
 pub mod table;
