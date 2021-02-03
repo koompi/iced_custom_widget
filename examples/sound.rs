@@ -83,7 +83,7 @@ pub enum SoundMessage {
     MuteSound,
     MutedInSound,
     EnableEffect(usize),
-    TestSoundEffect,
+    TestSoundEffect(usize),
     BalanceChanged(f32),
     WindowResize((u32, u32)),
     CloseApp,
@@ -113,32 +113,32 @@ pub enum SoundEffectType {
     Logout,
     Wakeup,
     VolumnUpDown,
-    Notification,
-    LowBattery,
-    SendIconLauncher,
-    EmptyTrash,
-    Plugin,
-    Plugout,
-    RemoveDevConnected,
-    RemovableDevRemoved,
-    ErrorSound,
+    // Notification,
+    // LowBattery,
+    // SendIconLauncher,
+    // EmptyTrash,
+    // Plugin,
+    // Plugout,
+    // RemoveDevConnected,
+    // RemovableDevRemoved,
+    // ErrorSound,
 }
 impl SoundEffectType {
-    const ALL: [SoundEffectType; 14] = [
+    const ALL: [SoundEffectType; 5] = [
         SoundEffectType::Bootup,
         SoundEffectType::ShutDown,
         SoundEffectType::Logout,
         SoundEffectType::Wakeup,
         SoundEffectType::VolumnUpDown,
-        SoundEffectType::Notification,
-        SoundEffectType::LowBattery,
-        SoundEffectType::SendIconLauncher,
-        SoundEffectType::EmptyTrash,
-        SoundEffectType::Plugin,
-        SoundEffectType::Plugout,
-        SoundEffectType::RemoveDevConnected,
-        SoundEffectType::RemovableDevRemoved,
-        SoundEffectType::RemovableDevRemoved,
+        // SoundEffectType::Notification,
+        // SoundEffectType::LowBattery,
+        // SoundEffectType::SendIconLauncher,
+        // SoundEffectType::EmptyTrash,
+        // SoundEffectType::Plugin,
+        // SoundEffectType::Plugout,
+        // SoundEffectType::RemoveDevConnected,
+        // SoundEffectType::RemovableDevRemoved,
+        // SoundEffectType::RemovableDevRemoved,
     ];
 }
 impl fmt::Display for SoundEffectType {
@@ -152,15 +152,15 @@ impl fmt::Display for SoundEffectType {
                 SoundEffectType::Logout => "Log out",
                 SoundEffectType::Wakeup => "Wake Up",
                 SoundEffectType::VolumnUpDown => "Volume +/-",
-                SoundEffectType::Notification => "Notifications",
-                SoundEffectType::LowBattery => "Low battery",
-                SoundEffectType::SendIconLauncher => "Send icon in Launcher to Desktop",
-                SoundEffectType::EmptyTrash => "Empty Trash",
-                SoundEffectType::Plugin => "Plug in",
-                SoundEffectType::Plugout => "Plug out",
-                SoundEffectType::RemoveDevConnected => "Removable device connected",
-                SoundEffectType::RemovableDevRemoved => "Removable device removed",
-                SoundEffectType::ErrorSound => "Error",
+                // SoundEffectType::Notification => "Notifications",
+                // SoundEffectType::LowBattery => "Low battery",
+                // SoundEffectType::SendIconLauncher => "Send icon in Launcher to Desktop",
+                // SoundEffectType::EmptyTrash => "Empty Trash",
+                // SoundEffectType::Plugin => "Plug in",
+                // SoundEffectType::Plugout => "Plug out",
+                // SoundEffectType::RemoveDevConnected => "Removable device connected",
+                // SoundEffectType::RemovableDevRemoved => "Removable device removed",
+                // SoundEffectType::ErrorSound => "Error",
             }
         )
     }
@@ -277,15 +277,15 @@ impl Application for Sound {
             str_con("Log out"),
             str_con("Wake Up"),
             str_con("Volume +/-"),
-            str_con("Notifications"),
-            str_con("Low battery"),
-            str_con("Send icon in Launcher to Desktop"),
-            str_con("Empty Trash"),
-            str_con("Plug in"),
-            str_con("Plug out"),
-            str_con("Removeable device connected"),
-            str_con("Removable device removed"),
-            str_con("Error"),
+            // str_con("Notifications"),
+            // str_con("Low battery"),
+            // str_con("Send icon in Launcher to Desktop"),
+            // str_con("Empty Trash"),
+            // str_con("Plug in"),
+            // str_con("Plug out"),
+            // str_con("Removeable device connected"),
+            // str_con("Removable device removed"),
+            // str_con("Error"),
         ];
         let mut vec_tuple: Vec<(button::State, button::State, String)> = Vec::new();
         vec_sounds.iter_mut().for_each(|name| {
@@ -376,6 +376,11 @@ impl Application for Sound {
             }
             SoundMessage::SoundOutChanged(val) => {
                 self.out_value = val;
+                SoundBackEnd::initialize();
+                Command::none()
+            }
+            SoundMessage::InputLevelChanged(val) => {
+                self.input_level = val;
                 Command::none()
             }
             SoundMessage::WindowResize((w, h)) => {
@@ -386,6 +391,15 @@ impl Application for Sound {
             }
             SoundMessage::SoundInChanged(val) => {
                 self.input_val = val;
+                Command::none()
+            }
+            SoundMessage::TestSoundEffect(idx) => {
+                let key = SoundEffectType::ALL[idx];
+                let value = self.sound_effecs.hash_sounds.index(&key);
+                match playback::run(&value) {
+                    Ok(()) => println!("sucesss"),
+                    Err(e) => println!("Error: {}", e),
+                }
                 Command::none()
             }
             SoundMessage::CloseApp => {
@@ -402,12 +416,6 @@ impl Application for Sound {
             }
             SoundMessage::EnableEffect(idx) => {
                 self.effect_tick = idx;
-                let key = SoundEffectType::ALL[idx];
-                let value = self.sound_effecs.hash_sounds.index(&key);
-                match playback::run(&value) {
-                    Ok(()) => println!("sucesss"),
-                    Err(e) => println!("Error: {}", e),
-                }
                 Command::none()
             }
             SoundMessage::AutomatedSoundSuppression(is_auto) => {
@@ -513,7 +521,7 @@ impl Application for Sound {
                                     Slider::new(
                                         &mut self.slider_output,
                                         0.0..=100.0,
-                                        self.input_val,
+                                        self.out_value,
                                         SoundMessage::SoundOutChanged,
                                     ).style(SliderStyle::Circle)
                                     .step(1.0)
@@ -571,11 +579,12 @@ impl Application for Sound {
                 .style(ContainerStyle::LightGrayCircle),
             );
         let input_content = Column::new()
-            .push(Container::new(Text::new("Input").size(self.FONT_SIZE + 12)).padding(10))
+            .push(Container::new(Text::new("Input").size(self.FONT_SIZE + 12)))
             .spacing(10)
             .push(
                 Container::new(
                     Row::new()
+                        .width(Length::Fill)
                         .align_items(Align::Center)
                         .spacing(10)
                         .push(Text::new("Input Devices"))
@@ -659,50 +668,59 @@ impl Application for Sound {
         let sound_effects = Column::new()
             .spacing(10)
             .push(
-                Row::new()
-                    .spacing(10)
-                    .push(Text::new("Sound Effects"))
-                    .push(Space::with_width(Length::Fill))
-                    .push(Toggler::new(
-                        self.is_sound_effect,
-                        String::from(""),
-                        SoundMessage::SoundEffect,
-                    )),
+                Container::new(
+                    Row::new()
+                        .align_items(Align::Center)
+                        .spacing(10)
+                        .push(Text::new("Sound Effects"))
+                        .push(Space::with_width(Length::Fill))
+                        .push(Toggler::new(
+                            self.is_sound_effect,
+                            String::from(""),
+                            SoundMessage::SoundEffect,
+                        )),
+                )
+                .padding(10)
+                .style(ContainerStyle::LightGrayCircle),
             )
-            .push(self.sample_effects.iter_mut().enumerate().fold(
-                Column::new().spacing(10).align_items(Align::Center),
-                |col_sound, (idx, (enable_state, state, name))| {
-                    col_sound.push(
-                        Row::new()
-                            .align_items(Align::Center)
-                            .spacing(10)
-                            .width(Length::Fill)
-                            .push(
-                                Button::new(
-                                    enable_state,
-                                    Row::new().push(Text::new(name.as_str())),
-                                )
+            .push(if self.is_sound_effect {
+                self.sample_effects.iter_mut().enumerate().fold(
+                    Column::new().spacing(10).align_items(Align::Center),
+                    |col_sound, (idx, (enable_state, state, name))| {
+                        col_sound.push(
+                            Row::new()
+                                .align_items(Align::Center)
+                                .spacing(10)
                                 .width(Length::Fill)
-                                .style(ButtonStyle::Transparent)
-                                .on_press(SoundMessage::TestSoundEffect),
-                            )
-                            // .push(Space::with_width(Length::Fill))
-                            .push(
-                                Button::new(
-                                    state,
-                                    Icon::new(if effect_enable && current_tick == idx {
-                                        '\u{f058}'
-                                    } else {
-                                        '\u{f111}'
-                                    }),
+                                .push(
+                                    Button::new(
+                                        enable_state,
+                                        Row::new().push(Text::new(name.as_str())),
+                                    )
+                                    .width(Length::Fill)
+                                    .style(ButtonStyle::Transparent)
+                                    .on_press(SoundMessage::TestSoundEffect(idx)),
                                 )
-                                .padding(4)
-                                .style(ButtonStyle::Transparent)
-                                .on_press(SoundMessage::EnableEffect(idx)),
-                            ),
-                    )
-                },
-            ));
+                                // .push(Space::with_width(Length::Fill))
+                                .push(
+                                    Button::new(
+                                        state,
+                                        Icon::new(if effect_enable && current_tick == idx {
+                                            '\u{f058}'
+                                        } else {
+                                            '\u{f111}'
+                                        }),
+                                    )
+                                    .padding(4)
+                                    .style(ButtonStyle::Transparent)
+                                    .on_press(SoundMessage::EnableEffect(idx)),
+                                ),
+                        )
+                    },
+                )
+            } else {
+                Column::new()
+            });
         // f058 tick-circle
         // f111 circle
         let contnet = Column::new()
@@ -783,7 +801,6 @@ mod playback {
     use std::time::Duration;
     // NOTE: You probably want to investigate the
     // mixer feature for real use cases.
-    use async_std::task;
     struct Sound {
         data: Vec<u8>,
         volume: f32,
@@ -881,5 +898,22 @@ mod standart_path {
     use std::path::PathBuf;
     pub fn sys_data_dir() -> Option<PathBuf> {
         Some(PathBuf::new().join("/usr/share/"))
+    }
+}
+
+mod SoundBackEnd {
+
+    pub fn initialize() {}
+    pub fn volume_up(level: u32) {}
+    pub fn volumn_down(level: u32) {}
+    pub fn mute_sound(is_mute: bool) {}
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn sound_test() {
+        println!("{}", Volume::MAX);
+        assert_eq!(2 + 2, 3);
     }
 }
