@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
 use iced::{
     button, executor, pick_list, scrollable, text_input, Align, Application, Button, Column,
     Command, Container, Element, HorizontalAlignment, Length, PickList, Row, Rule, Scrollable,
@@ -581,22 +583,22 @@ impl fmt::Display for DeviceMacAddr {
 
 #[derive(Default, Debug, Clone)]
 struct CommonIp {
-    Method: Vec<String>,
-    PrimaryDns: String,
-    SecondaryDns: String,
+    method: Vec<String>,
+    primarydns: String,
+    seoondarydns: String,
 }
 #[derive(Default, Debug, Clone)]
 struct Security {
-    Type: Vec<String>,
-    PwdOption: Vec<u8>,
-    Pwd: String,
+    types: Vec<String>,
+    pwdoptions: Vec<u8>,
+    pwd: String,
 }
 
 #[derive(Default, Debug, Clone)]
 struct Wlan {
-    Ssid: String,
-    DevMacAddr: Option<String>,
-    CustomMtu: bool,
+    ssid: String,
+    devmacaddr: Option<String>,
+    custommtu: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -636,7 +638,7 @@ pub enum NetSettingsMsg {
     OnSave,
     OnCancel,
 }
-
+#[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SecurityType {
     NONE,
