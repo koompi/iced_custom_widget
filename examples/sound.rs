@@ -173,7 +173,7 @@ impl Default for SoundEffectType {
 impl SettingsSoundEffect {
     pub fn new() -> Self {
         Self {
-            file: dirs::config_dir().unwrap(),
+            file: dirs_next::config_dir().unwrap(),
             ..Default::default()
         }
     }

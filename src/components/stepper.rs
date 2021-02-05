@@ -7,36 +7,38 @@ use iced_native::{
    mouse, row, text, Align, Background, Clipboard, Color, Container, Element, Hasher, HorizontalAlignment, Layout, Length,
    Point, Rectangle, Row, Text, VerticalAlignment, Widget,
 };
+use num_traits::{Num, NumOps, NumAssignOps};
 
-pub struct Stepper<'a, Message, Renderer: self::Renderer + text::Renderer> {
-   value: f32,
-   step: f32,
-   min: f32,
-   max: f32,
+pub struct Stepper<'a, T: Num, Message, Renderer: self::Renderer + text::Renderer> {
+   value: T,
+   step: T,
+   min: T,
+   max: T,
    spacing: u16,
    padding: u16,
    value_width: Option<u16>,
    text_size: Option<u16>,
    decrease_btn_state: &'a mut State,
    increase_btn_state: &'a mut State,
-   on_changed: Box<dyn Fn(f32) -> Message + 'a>,
+   on_changed: Box<dyn Fn(T) -> Message + 'a>,
    font: Renderer::Font,
    style: Renderer::Style,
 }
 
-impl<'a, Message, Renderer> Stepper<'a, Message, Renderer>
+impl<'a, T, Message, Renderer> Stepper<'a, T, Message, Renderer>
 where
+   T: Num,
    Renderer: text::Renderer + self::Renderer,
 {
-   pub fn new<F>(value: f32, decrease_btn_state: &'a mut State, increase_btn_state: &'a mut State, on_changed: F) -> Self
+   pub fn new<F>(value: T, decrease_btn_state: &'a mut State, increase_btn_state: &'a mut State, on_changed: F) -> Self
    where
-      F: 'static + Fn(f32) -> Message,
+      F: 'static + Fn(T) -> Message,
    {
       Self {
          value,
-         step: 1.,
-         min: 0.,
-         max: 100.,
+         step: T::one(),
+         min: T::zero(),
+         max: T::one(),
          spacing: 0,
          padding: Renderer::DEFAULT_PADDING,
          value_width: None,
@@ -49,17 +51,17 @@ where
       }
    }
 
-   pub fn step(mut self, step: f32) -> Self {
+   pub fn step(mut self, step: T) -> Self {
       self.step = step;
       self
    }
 
-   pub fn min(mut self, min: f32) -> Self {
+   pub fn min(mut self, min: T) -> Self {
       self.min = min;
       self
    }
 
-   pub fn max(mut self, max: f32) -> Self {
+   pub fn max(mut self, max: T) -> Self {
       self.max = max;
       self
    }
@@ -95,8 +97,9 @@ where
    }
 }
 
-impl<'a, Message, Renderer> Widget<Message, Renderer> for Stepper<'a, Message, Renderer>
-where
+impl<'a, T, Message, Renderer> Widget<Message, Renderer> for Stepper<'a, T, Message, Renderer>
+where 
+   T: Num + NumOps + NumAssignOps,
    Renderer: self::Renderer + text::Renderer + container::Renderer + row::Renderer,
 {
    fn width(&self) -> Length {
@@ -405,12 +408,12 @@ impl Renderer for iced_wgpu::Renderer
    }
 }
 
-impl<'a, Message, Renderer> From<Stepper<'a, Message, Renderer>> for Element<'a, Message, Renderer>
+impl<'a, T, Message, Renderer> From<Stepper<'a, T, Message, Renderer>> for Element<'a, Message, Renderer>
 where
    Message: 'a,
    Renderer: 'a + self::Renderer + text::Renderer + container::Renderer + row::Renderer + button::Renderer,
 {
-   fn from(stepper: Stepper<'a, Message, Renderer>) -> Self {
+   fn from(stepper: Stepper<'a, T, Message, Renderer>) -> Self {
       Element::new(stepper)
    }
 }
