@@ -58,15 +58,14 @@ pub struct CardDemo {
 
 #[derive(SmartDefault)]
 pub struct ScaleState {
-   #[default(1.0)]
    scale: f32,
-   decrease_btn_state: stepper::State,
-   increase_btn_state: stepper::State,
+   stepper_state: stepper::State,
 }
 impl CardDemo {
    pub fn init() -> iced::Result {
+      std::env::set_var("WINIT_X11_SCALE_FACTOR", "1.2");
       CardDemo::run(Settings {
-         default_text_size: 13,
+         // default_text_size: 13,
          ..Settings::default()
       })
    }
@@ -123,14 +122,11 @@ impl Sandbox for CardDemo {
          .on_pressed(Self::Message::OnCardPressed)
          .style(CustomCard::Default);
       let resizer = Stepper::new(
+         &mut self.scale_state.stepper_state,
          self.scale_state.scale,
-         &mut self.scale_state.decrease_btn_state,
-         &mut self.scale_state.increase_btn_state,
+         50.50,
          Self::Message::ScaleChanged,
-      )
-      .step(0.1)
-      .min(0.5)
-      .max(2.);
+      ).step(2.5);
       let col = Column::new().push(card).push(resizer).push(pick_list);
       Container::new(col)
          .width(Length::Fill)

@@ -15,3 +15,4 @@ pub mod table;
 pub mod table_row;
 pub mod text_input;
 pub mod toggler;
+pub mod number_input;

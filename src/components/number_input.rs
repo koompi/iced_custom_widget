@@ -1,4 +1,4 @@
-use crate::styles::stepper::StyleSheet;
+use crate::styles::number_input::StyleSheet;
 use std::fmt::Display;
 use iced_graphics::Primitive;
 use iced_native::{
@@ -10,7 +10,7 @@ use iced_native::{
 };
 use num_traits::{Num, NumAssignOps};
 
-pub struct Stepper<'a, T, Message, Renderer: self::Renderer + text::Renderer> {
+pub struct NumberInput<'a, T, Message, Renderer: self::Renderer + text::Renderer> {
    state: &'a mut State,
    value: T,
    step: T,
@@ -25,7 +25,7 @@ pub struct Stepper<'a, T, Message, Renderer: self::Renderer + text::Renderer> {
    style: Renderer::Style,
 }
 
-impl<'a, T, Message, Renderer> Stepper<'a, T, Message, Renderer>
+impl<'a, T, Message, Renderer> NumberInput<'a, T, Message, Renderer>
 where
    T: Num,
    Renderer: text::Renderer + self::Renderer,
@@ -101,7 +101,7 @@ where
    }
 }
 
-impl<'a, T, Message, Renderer> Widget<Message, Renderer> for Stepper<'a, T, Message, Renderer>
+impl<'a, T, Message, Renderer> Widget<Message, Renderer> for NumberInput<'a, T, Message, Renderer>
 where
    T: Num + NumAssignOps + PartialOrd + Display + Copy,
    Renderer: self::Renderer + text::Renderer + container::Renderer + row::Renderer,
@@ -418,14 +418,14 @@ impl Renderer for iced_wgpu::Renderer {
    }
 }
 
-impl<'a, T, Message, Renderer> From<Stepper<'a, T, Message, Renderer>>
+impl<'a, T, Message, Renderer> From<NumberInput<'a, T, Message, Renderer>>
    for Element<'a, Message, Renderer>
 where
    T: 'a + Num + NumAssignOps + PartialOrd + Display + Copy,
    Message: 'a,
    Renderer: 'a + self::Renderer + text::Renderer + container::Renderer + row::Renderer + button::Renderer,
 {
-   fn from(stepper: Stepper<'a, T, Message, Renderer>) -> Self {
-      Element::new(stepper)
+   fn from(num_input: NumberInput<'a, T, Message, Renderer>) -> Self {
+      Element::new(num_input)
    }
 }

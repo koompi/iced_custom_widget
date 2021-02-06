@@ -10,6 +10,7 @@ pub mod stepper;
 pub mod tab;
 pub mod table;
 pub mod toggler;
+pub mod number_input;
 pub use card::Card;
 pub use grid::Grid;
 pub use icon::Icon;
