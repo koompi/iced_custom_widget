@@ -11,6 +11,7 @@ pub mod tab;
 pub mod table;
 pub mod toggler;
 pub mod number_input;
+
 pub use card::Card;
 pub use grid::Grid;
 pub use icon::Icon;
@@ -21,3 +22,4 @@ pub use stepper::Stepper;
 pub use tab::Tab;
 pub use table::{Table, TableColumn, TableData, TableError, TableOptions, TableOrder, TableResult};
 pub use toggler::Toggler;
+pub use number_input::NumberInput;
