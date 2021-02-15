@@ -1,11 +1,14 @@
 use iced_custom_widget as cw;
 use cw::components::number_input::{self, NumberInput};
+use cw::utils::Theme;
+use cw::styles::custom_styles::CustomTextInput;
 use iced::{Container, Element, Length, Sandbox, Settings, Text, Row, Align};
+use style::CustomNumInput;
 
 #[derive(Default)]
 pub struct NumberInputDemo {
    state: number_input::State,
-   value: f32
+   value: u8
 }
 
 impl NumberInputDemo {
@@ -20,7 +23,7 @@ impl NumberInputDemo {
 
 #[derive(Debug, Clone)]
 pub enum NumInpMessage {
-   NumInpChanged(f32),
+   NumInpChanged(u8),
 }
 
 impl Sandbox for NumberInputDemo {
@@ -47,9 +50,9 @@ impl Sandbox for NumberInputDemo {
       let txt_minute = NumberInput::new(
          &mut self.state,
          self.value,
-         27.5,
+         60,
          Self::Message::NumInpChanged,
-      ).padding(5).step(1.5);
+      ).step(2).min(1).style(CustomNumInput).input_style(CustomTextInput::Default(Theme::light().palette));
       Container::new(
          Row::new().spacing(10).align_items(Align::Center)
          .push(lb_minute)
@@ -60,4 +63,20 @@ impl Sandbox for NumberInputDemo {
 #[allow(unused_must_use)]
 fn main() {
    NumberInputDemo::init(); 
+}
+
+mod style {
+   use iced_custom_widget::styles::number_input::{Style, StyleSheet};
+   use iced::{Color, Background};
+   pub struct CustomNumInput;
+
+   impl StyleSheet for CustomNumInput {
+      fn active(&self) -> Style { 
+         Style {
+            button_background: Some(Background::Color(Color::from_rgb8(15, 85, 179))),
+            icon_color: Color::WHITE,
+            ..Style::default()
+         }
+      }
+   }
 }

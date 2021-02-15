@@ -1,23 +1,15 @@
 use iced_native::{Background, Color};
 
 pub struct Style {
-   pub text_background: Option<Background>,
    pub button_background: Option<Background>,
-   pub border_radius: f32,
-   pub border_width: f32,
-   pub border_color: Color,
-   pub text_color: Color,
+   pub icon_color: Color,
 }
 
 impl std::default::Default for Style {
    fn default() -> Self {
       Self {
-         text_background: None,
          button_background: None,
-         border_radius: 2.0,
-         border_width: 1.0,
-         border_color: Color::BLACK,
-         text_color: Color::BLACK,
+         icon_color: Color::BLACK,
       }
    }
 }
@@ -38,9 +30,9 @@ pub trait StyleSheet {
                ..color
             }),
          }),
-         text_color: Color {
-            a: active.text_color.a * 0.5,
-            ..active.text_color
+         icon_color: Color {
+            a: active.icon_color.a * 0.5,
+            ..active.icon_color
          },
          ..active
       }
@@ -51,14 +43,7 @@ struct Default;
 
 impl StyleSheet for Default {
    fn active(&self) -> Style {
-      let default = Style::default();
-      Style {
-         border_color: Color {
-            a: default.text_color.a * 0.3,
-            ..default.text_color
-         },
-         ..default
-      }
+      Style::default()
    }
 }
 

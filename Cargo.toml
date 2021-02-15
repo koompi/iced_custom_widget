@@ -18,4 +18,4 @@ rand = "^0.8"
 smart-default = "0.6.0"
 sdl2 = "0.34.3"
 dirs-next = "2.0"
-num-traits = { version = "0.2", default-features = false, features = ["libm"] }
+num-traits = { version = "0.2", default-features = false }

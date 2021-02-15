@@ -1,6 +1,6 @@
 use crate::utils::ColorPalette;
 use iced::{
-   button, checkbox, container, pick_list, scrollable, text_input, Background, Color, Vector
+   button, checkbox, container, pick_list, scrollable, text_input, Background, Color
 };
 
 pub enum CustomContainer {

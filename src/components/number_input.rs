@@ -3,9 +3,9 @@ use std::fmt::Display;
 use std::str::FromStr;
 use iced_graphics::Primitive;
 use iced_native::{
-   container, event::{self, Event}, mouse, text_input, column, keyboard, layout::{Limits, Node}, 
+   container, event::{self, Event}, mouse, text_input, column, row, keyboard, layout::{Limits, Node}, 
    Align, Background, Clipboard, Color, Container, Element, Hasher, TextInput, Size, Column,
-   HorizontalAlignment, Layout, Length, Point, Rectangle, Text, VerticalAlignment, Widget,
+   HorizontalAlignment, Layout, Length, Point, Rectangle, Text, VerticalAlignment, Widget, Row,
 };
 use num_traits::{Num, NumAssignOps};
 
@@ -39,15 +39,15 @@ where
       T: 'static
    {
       let State {input_state, mod_state} = state;
-      
+      let padding = <Renderer as self::Renderer>::DEFAULT_PADDING;
       Self {
          state: mod_state,
          value,
          step: T::one(),
          bound: (T::zero(), max),
-         padding: <Renderer as self::Renderer>::DEFAULT_PADDING,
+         padding,
          size: None,
-         content: TextInput::new(input_state, "", format!("{}", value).as_str(), move |s| on_changed(T::from_str(&s).unwrap_or(value))).width(Length::Units(127)),
+         content: TextInput::new(input_state, "", format!("{}", value).as_str(), move |s| on_changed(T::from_str(&s).unwrap_or(value))).padding(padding).width(Length::Units(127)),
          on_change: Box::new(on_changed),
          style: <Renderer as self::Renderer>::Style::default(),
          font: Default::default(),
@@ -111,24 +111,33 @@ where
       self
    }
 
+   pub fn input_style(mut self, style: impl Into<<Renderer as iced_native::text_input::Renderer>::Style>) -> Self {
+      self.content = self.content.style(style.into());
+      self
+   }
+
    fn decrease_val(&mut self, messages: &mut Vec<Message>) {
-      let new_val = self.value - self.step;
-      self.value = if new_val > self.bound.0 {
-         new_val
-      } else {
-         self.bound.0
-      };
-      messages.push((self.on_change)(self.value));
+      if self.value > self.bound.0 {
+         let new_val = self.value - self.step;
+         self.value = if new_val > self.bound.0 {
+            new_val
+         } else {
+            self.bound.0
+         };
+         messages.push((self.on_change)(self.value));
+      }
    }
 
    fn increase_val(&mut self, messages: &mut Vec<Message>) {
-      let new_val = self.value + self.step;
-      self.value = if new_val < self.bound.1 {
-         new_val
-      } else {
-         self.bound.1
-      };
-      messages.push((self.on_change)(self.value));
+      if self.value < self.bound.1 {
+         let new_val = self.value + self.step;
+         self.value = if new_val < self.bound.1 {
+            new_val
+         } else {
+            self.bound.1
+         };
+         messages.push((self.on_change)(self.value));
+      }
    }
 }
 
@@ -136,7 +145,7 @@ impl<'a, T, Message, Renderer> Widget<Message, Renderer> for NumberInput<'a, T, 
 where
    T: Num + NumAssignOps + PartialOrd + Display + FromStr + ToString + Copy,
    Message: Clone,
-   Renderer: self::Renderer + container::Renderer + column::Renderer,
+   Renderer: self::Renderer + container::Renderer + column::Renderer + row::Renderer,
 {
    fn width(&self) -> Length {
       Widget::<Message, Renderer>::width(&self.content)
@@ -151,16 +160,16 @@ where
       let limits = limits.width(self.width()).height(Length::Shrink).pad(padding);
       let content = self.content.layout(renderer, &limits);
       let txt_size = self.size.unwrap_or(renderer.default_size());
-      let icon_size = (f32::from(txt_size)*0.75).min(content.size().height * 0.45) as u16;
-      let mut inc = Container::<(), Renderer>::new(Text::new(" ▲ ").size(icon_size)).center_y().center_x();
-      let mut dec = Container::<(), Renderer>::new(Text::new(" ▼ ").size(icon_size)).center_y().center_x();
-      if self.padding < Renderer::DEFAULT_PADDING {
-         inc = inc.height(Length::Units(icon_size));
-         dec = dec.height(Length::Units(icon_size));
-      } 
-      let mut modifier = Column::<(), Renderer>::new().width(Length::Shrink).spacing(1).push(inc).push(dec).layout(renderer, &limits.loose());
+      let icon_size = txt_size*3/4;
+      let inc = Container::<(), Renderer>::new(Text::new(" ▲ ").size(icon_size)).center_y().center_x();
+      let dec = Container::<(), Renderer>::new(Text::new(" ▼ ").size(icon_size)).center_y().center_x();
+      let mut modifier = if self.padding < Renderer::DEFAULT_PADDING {
+         Row::<(), Renderer>::new().spacing(1).width(Length::Shrink).push(inc).push(dec).layout(renderer, &limits.loose())
+      } else {
+         Column::<(), Renderer>::new().spacing(1).width(Length::Shrink).push(inc).push(dec).layout(renderer, &limits.loose())
+      };
       let intrinsic = Size::new(
-         content.size().width,
+         content.size().width - 3.0,
          content.size().height.max(modifier.size().height)
       );
       modifier.align(Align::End, Align::Center, intrinsic);
@@ -339,9 +348,9 @@ impl Renderer for iced_wgpu::Renderer {
          background: decrease_btn_style
             .button_background
             .unwrap_or(Background::Color(Color::TRANSPARENT)),
-         border_radius: decrease_btn_style.border_radius,
-         border_width: decrease_btn_style.border_width,
-         border_color: decrease_btn_style.border_color,
+         border_radius: 3.0,
+         border_width: 0.,
+         border_color: Color::TRANSPARENT,
       };
       let decrease_text = Primitive::Text {
          content: String::from("▼"),
@@ -351,8 +360,8 @@ impl Renderer for iced_wgpu::Renderer {
             ..dec_bounds
          },
          font,
-         size: dec_bounds.height,
-         color: decrease_btn_style.text_color,
+         size: dec_bounds.height * 0.9,
+         color: decrease_btn_style.icon_color,
          horizontal_alignment: HorizontalAlignment::Center,
          vertical_alignment: VerticalAlignment::Center,
       };
@@ -366,9 +375,9 @@ impl Renderer for iced_wgpu::Renderer {
          background: increase_btn_style
             .button_background
             .unwrap_or(Background::Color(Color::TRANSPARENT)),
-         border_radius: increase_btn_style.border_radius,
-         border_width: increase_btn_style.border_width,
-         border_color: increase_btn_style.border_color,
+         border_radius: 3.0,
+         border_width: 0.,
+         border_color: Color::TRANSPARENT,
       };
       let increase_text = Primitive::Text {
          content: String::from("▲"),
@@ -378,8 +387,8 @@ impl Renderer for iced_wgpu::Renderer {
             ..inc_bounds
          },
          font,
-         size: inc_bounds.height,
-         color: increase_btn_style.text_color,
+         size: inc_bounds.height * 0.9,
+         color: increase_btn_style.icon_color,
          horizontal_alignment: HorizontalAlignment::Center,
          vertical_alignment: VerticalAlignment::Center,
       };
@@ -407,7 +416,7 @@ impl<'a, T, Message, Renderer> From<NumberInput<'a, T, Message, Renderer>>
 where
    T: 'a + Num + NumAssignOps + PartialOrd + Display + FromStr + Copy,
    Message: 'a + Clone,
-   Renderer: 'a + self::Renderer + container::Renderer + column::Renderer,
+   Renderer: 'a + self::Renderer + container::Renderer + column::Renderer + row::Renderer,
 {
    fn from(num_input: NumberInput<'a, T, Message, Renderer>) -> Self {
       Element::new(num_input)
