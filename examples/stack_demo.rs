@@ -1,13 +1,8 @@
-// use crate::components::outline_button::{self, OutlineButton};
-// use crate::styles::custom_styles;
 use iced::{Checkbox, Column, Container, Element, Length, Point, Sandbox, Settings, Text};
 use iced_custom_widget as cw;
-// use iced_custom_wdiget::components::stack::{Overflow, Stack};
 use cw::components::{
    outline_button, outline_button::OutlineButton, stack::Overflow, stack::Stack,
 };
-use cw::styles::custom_styles;
-use cw::utils::themes::Theme;
 #[derive(Debug, Clone)]
 pub enum Message {
    ToggleOverflow(bool),
@@ -48,22 +43,13 @@ impl Sandbox for StackDemo {
    }
 
    fn view(&mut self) -> Element<Self::Message> {
-      let overflow_checkbox = Checkbox::new(self.is_overflow, "Overflow", Message::ToggleOverflow)
-         .style(custom_styles::CustomCheckbox::Default(
-            Theme::light().palette,
-         ));
+      let overflow_checkbox = Checkbox::new(self.is_overflow, "Overflow", Message::ToggleOverflow);
       let container1 = Container::new(Text::new("label1"))
          .width(Length::Units(200))
-         .height(Length::Units(100))
-         .style(custom_styles::CustomContainer::BrightBackground(
-            Theme::light().palette,
-         ));
+         .height(Length::Units(100));
       let container2 = Container::new(Text::new("label2"))
          .width(Length::Units(150))
-         .height(Length::Units(150))
-         .style(custom_styles::CustomContainer::BrightForeground(
-            Theme::light().palette,
-         ));
+         .height(Length::Units(150));
       let button = OutlineButton::new(&mut self.btn_state, Text::new("Click me!"))
          .on_press(Message::ButtonPressed);
       let move_pos = Point::new(20., 30.);

@@ -1,5 +1,8 @@
-use crate::utils::themes::ColorPalette;
-use iced::{button, checkbox, container, pick_list, scrollable, text_input, Background, Color};
+use crate::utils::ColorPalette;
+use iced::{
+   button, checkbox, container, pick_list, scrollable, text_input, Background, Color
+};
+
 pub enum CustomContainer {
    BrightForeground(ColorPalette),
    NormalForeground(ColorPalette),

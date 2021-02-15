@@ -1,5 +1,7 @@
-use crate::components::icon_brand::IconBrand;
-use crate::styles::buttons::ButtonStyle;
+use iced_custom_widget as cw;
+use cw::components::icon_brand::IconBrand;
+use cw::utils::Theme;
+use cw::styles::custom_styles::CustomButton;
 use iced::{button, Align, Button, Column, Container, Element, Text};
 #[derive(Debug, Clone)]
 pub struct App {
@@ -39,7 +41,7 @@ impl App {
       let app_btn = Button::new(&mut self.clickable, container)
          .padding(10)
          .on_press(AppMessage::AppClicked)
-         .style(ButtonStyle::Circular(255, 255, 255, 1.0));
+         .style(CustomButton::BrightText(Theme::light().palette));
       Container::new(app_btn).center_x().center_y().into()
    }
 }

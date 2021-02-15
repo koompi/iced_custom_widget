@@ -10,8 +10,8 @@ use iced_native::Event::Window;
 use icw::components::Icon;
 use icw::components::Tab;
 use icw::components::Toggler;
-use icw::styles::{
-    buttons::ButtonStyle, containers::ContainerStyle, pick_list::PickListStyle, slider::SliderStyle,
+use styles::{
+    ButtonStyle, ContainerStyle, PickListStyle, SliderStyle,
 };
 
 use std::collections::HashMap;
@@ -916,4 +916,173 @@ mod tests {
         println!("{}", Volume::MAX);
         assert_eq!(2 + 2, 3);
     }
+}
+
+mod styles {
+use iced::{button, container, Color, Background, Vector};
+use iced::slider::{self, Handle, HandleShape};
+use iced::pick_list::{self, Menu};
+pub enum ButtonStyle {
+    Default,
+    Circular(u8, u8, u8, f32),
+    BigCircular(u8, u8, u8, f32),
+    CircleRadius(u8, u8, u8, f32, f32, Color),
+    Transparent,
+ }
+ 
+ impl button::StyleSheet for ButtonStyle {
+    fn active(&self) -> button::Style {
+       button::Style {
+            shadow_offset: Vector::new(0.0, 0.0),
+            background: match self {
+                ButtonStyle::Default => Some(Background::Color([0.87, 0.87, 0.87].into())),
+                ButtonStyle::Circular(c1, c2, c3, p)
+                | ButtonStyle::CircleRadius(c1, c2, c3, p, _, _)
+                | ButtonStyle::BigCircular(c1, c2, c3, p) => {
+                    Some(Background::Color(Color::from_rgba8(*c1, *c2, *c3, *p)))
+                }
+                ButtonStyle::Transparent => Some(Background::Color(Color::TRANSPARENT)),
+            },
+            border_radius: match self {
+                ButtonStyle::Default | ButtonStyle::Circular(_, _, _, _) => 4.0,
+                ButtonStyle::BigCircular(_, _, _, _) => 25.0,
+                ButtonStyle::Transparent => 0.0,
+                ButtonStyle::CircleRadius(_, _, _, _, r, _) => *r,
+            },
+            border_width: 0.0,
+            border_color: [0.7, 0.7, 0.7].into(),
+            text_color: match self {
+                ButtonStyle::Default
+                | ButtonStyle::BigCircular(_, _, _, _)
+                | ButtonStyle::Circular(_, _, _, _) => Color::WHITE,
+                ButtonStyle::Transparent => Color::BLACK,
+                ButtonStyle::CircleRadius(_, _, _, _, _, color) => *color,
+            },
+        }
+    }
+ }
+ 
+ pub enum ContainerStyle {
+    Custom,
+    InkColor,
+    LightGray,
+    White,
+    LightGrayCircle,
+    Black,
+ }
+ impl container::StyleSheet for ContainerStyle {
+    fn style(&self) -> container::Style {
+       container::Style {
+            text_color: None,
+            background: match self {
+                ContainerStyle::Custom => {
+                    Some(Background::Color(Color::from_rgba8(223, 228, 234, 1.0)))
+                }
+                ContainerStyle::InkColor => {
+                    Some(Background::from(Color::from_rgba8(206, 214, 224, 1.0)))
+                }
+                ContainerStyle::LightGray => {
+                    Some(Background::from(Color::from_rgba8(215, 219, 221, 1.0)))
+                }
+                ContainerStyle::White => {
+                    Some(Background::from(Color::from_rgba8(255, 255, 255, 1.0)))
+                }
+                ContainerStyle::LightGrayCircle => {
+                    Some(Background::from(Color::from_rgba8(215, 219, 221, 0.5)))
+                }
+                ContainerStyle::Black => Some(Background::from(Color::BLACK)),
+            },
+            border_radius: match self {
+                ContainerStyle::Custom
+                | ContainerStyle::LightGrayCircle
+                | ContainerStyle::White
+                | ContainerStyle::InkColor
+                | ContainerStyle::Black => 10.0,
+                ContainerStyle::LightGray => 0.0,
+            },
+            border_width: 0.0,
+            border_color: Color::from_rgba8(255, 255, 255, 1.0),
+        }
+    }
+ }
+pub enum SliderStyle {
+    Default,
+    Circle,
+}
+
+impl slider::StyleSheet for SliderStyle {
+    fn active(&self) -> slider::Style {
+        slider::Style {
+            rail_colors: (
+                Color::from_rgba8(128, 139, 150, 1.0),
+                Color::from_rgba8(128, 139, 150, 1.0),
+            ),
+            handle: Handle {
+                shape: match self {
+                    SliderStyle::Default => HandleShape::Rectangle {
+                        width: 24,
+                        border_radius: 8.0,
+                    },
+                    SliderStyle::Circle => HandleShape::Circle { radius: 12.0 },
+                },
+                color: Color::from_rgba8(128, 139, 150, 1.5),
+                border_color: Color::from_rgba8(44, 62, 80, 1.0),
+                border_width: 1.0,
+            },
+        }
+    }
+    fn hovered(&self) -> slider::Style {
+        let active = self.active();
+        slider::Style {
+            handle: Handle {
+                color: Color::from_rgba8(205, 213, 203, 1.0),
+                ..active.handle
+            },
+            ..active
+        }
+    }
+    fn dragging(&self) -> slider::Style {
+        let active = self.active();
+
+        slider::Style {
+            handle: Handle {
+                color: Color::from_rgba8(205, 213, 203, 1.0),
+                ..active.handle
+            },
+            ..active
+        }
+    }
+}
+pub struct PickListStyle;
+
+impl pick_list::StyleSheet for PickListStyle {
+    fn menu(&self) -> Menu {
+        Menu {
+            text_color: Color::BLACK,
+            background: Background::Color(Color::from_rgba8(215, 219, 221, 1.0)),
+            border_width: 0.5,
+            border_color: [0.7, 0.7, 0.7].into(),
+            selected_text_color: Color::WHITE,
+            selected_background: Background::Color(Color::from_rgba8(86, 101, 115, 1.0)),
+        }
+    }
+    fn active(&self) -> pick_list::Style {
+        pick_list::Style {
+            text_color: Color::BLACK,
+            background: Background::Color(Color::from_rgba8(215, 219, 221, 0.5)),
+            border_radius: 10.0,
+            border_width: 0.0,
+            border_color: Color::from_rgba(1.0, 1.0, 1.0, 1.0),
+            icon_size: 0.5,
+        }
+    }
+
+    fn hovered(&self) -> pick_list::Style {
+        pick_list::Style {
+            border_color: Color::BLACK,
+            ..self.active()
+        }
+    }
+}
+
 }
