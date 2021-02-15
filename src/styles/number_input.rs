@@ -25,17 +25,6 @@ impl std::default::Default for Style {
 pub trait StyleSheet {
    fn active(&self) -> Style;
 
-   fn hovered(&self) -> Style {
-      let active = self.active();
-      Style {
-         button_background: Some(Background::Color(Color {
-            a: active.text_color.a * 0.3,
-            ..active.text_color
-         })),
-         ..active
-      }
-   }
-
    fn pressed(&self) -> Style {
       self.active()
    }

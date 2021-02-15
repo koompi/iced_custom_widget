@@ -1,21 +1,18 @@
 use iced_custom_widget as cw;
 use cw::components::number_input::{self, NumberInput};
-use cw::styles::custom_card::CustomCard;
-use iced::{pick_list, Column, Container, Element, Length, PickList, Sandbox, Settings, Text};
-use smart_default::SmartDefault;
-use std::fmt::{Display, Formatter, Result};
+use iced::{Container, Element, Length, Sandbox, Settings, Text, Row, Align};
 
 #[derive(Default)]
 pub struct NumberInputDemo {
    state: number_input::State,
-   value: u8
+   value: f32
 }
 
 impl NumberInputDemo {
    pub fn init() -> iced::Result {
       std::env::set_var("WINIT_X11_SCALE_FACTOR", "1.2");
       NumberInputDemo::run(Settings {
-         // default_text_size: 13,
+         default_text_size: 14,
          ..Settings::default()
       })
    }
@@ -23,7 +20,7 @@ impl NumberInputDemo {
 
 #[derive(Debug, Clone)]
 pub enum NumInpMessage {
-   NumInpChanged(u8),
+   NumInpChanged(f32),
 }
 
 impl Sandbox for NumberInputDemo {
@@ -46,18 +43,18 @@ impl Sandbox for NumberInputDemo {
    }
 
    fn view(&mut self) -> Element<Self::Message> {
-      let num_inp = NumberInput::new(
+      let lb_minute = Text::new("Minutes:");
+      let txt_minute = NumberInput::new(
          &mut self.state,
          self.value,
-         50,
+         27.5,
          Self::Message::NumInpChanged,
-      );
-      Container::new(num_inp)
-         .width(Length::Fill)
-         .height(Length::Fill)
-         .center_x()
-         .center_y()
-         .into()
+      ).padding(5).step(1.5);
+      Container::new(
+         Row::new().spacing(10).align_items(Align::Center)
+         .push(lb_minute)
+         .push(txt_minute)
+      ).width(Length::Fill).height(Length::Fill).into()
    }
 }
 #[allow(unused_must_use)]

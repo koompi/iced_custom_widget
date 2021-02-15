@@ -1,7 +1,6 @@
 use iced_custom_widget as cw;
-use cw::components::card::{self, Card};
-use cw::components::stepper::{self, Stepper};
-use cw::styles::custom_card::CustomCard;
+use cw::card::{self, Card};
+use cw::stepper::{self, Stepper};
 use iced::{pick_list, Column, Container, Element, Length, PickList, Sandbox, Settings, Text};
 use smart_default::SmartDefault;
 use std::fmt::{Display, Formatter, Result};
@@ -119,8 +118,7 @@ impl Sandbox for CardDemo {
          .footer(footer)
          .spacing(20)
          .padding(10)
-         .on_pressed(Self::Message::OnCardPressed)
-         .style(CustomCard::Default);
+         .on_pressed(Self::Message::OnCardPressed);
       let resizer = Stepper::new(
          &mut self.scale_state.stepper_state,
          self.scale_state.scale,

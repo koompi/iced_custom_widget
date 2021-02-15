@@ -1,6 +1,8 @@
+mod app;
 use cw::components::grid::Grid;
 use cw::styles::custom_styles::CustomTextInput;
-use cw::utils::{app::App, app::AppMessage, themes::Theme};
+use cw::utils::Theme;
+use app::{App, AppMessage};
 use iced::{
    button, executor, scrollable, text_input, window, Align, Application, Column, Command,
    Container, Element, Length, Row, Scrollable, Settings, TextInput,
