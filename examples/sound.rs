@@ -523,7 +523,7 @@ impl Application for Sound {
                                         0.0..=100.0,
                                         self.out_value,
                                         SoundMessage::SoundOutChanged,
-                                    ).style(SliderStyle::Circle)
+                                    ).style(SliderStyle::Circle(8.0))
                                     .step(1.0)
                                     .width(Length::Fill),
                                 )
