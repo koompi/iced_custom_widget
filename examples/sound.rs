@@ -13,12 +13,16 @@ use icw::components::Toggler;
 use icw::styles::{
     buttons::ButtonStyle, containers::ContainerStyle, pick_list::PickListStyle, slider::SliderStyle,
 };
+
+use std::collections::HashMap;
 // use rodio::Source;
 use std::fmt;
+use std::hash::Hash;
 // use std::fs::File;
 // use std::io::BufReader;
+
+use std::ops::Index;
 use std::path::PathBuf;
-use PlaySound::run;
 #[allow(non_snake_case)]
 #[derive(Default, Debug, Clone)]
 pub struct Sound {
@@ -79,7 +83,7 @@ pub enum SoundMessage {
     MuteSound,
     MutedInSound,
     EnableEffect(usize),
-    TestSoundEffect,
+    TestSoundEffect(usize),
     BalanceChanged(f32),
     WindowResize((u32, u32)),
     CloseApp,
@@ -97,27 +101,69 @@ pub trait SoundEffect {
 #[derive(Debug, Default, Clone)]
 pub struct SettingsSoundEffect {
     file: std::path::PathBuf,
+    hash_sounds: HashMap<SoundEffectType, PathBuf>,
     effect_type: SoundEffectType,
     volume: u32,
     speed: u32,
 }
-
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum SoundEffectType {
     Bootup,
     ShutDown,
     Logout,
     Wakeup,
     VolumnUpDown,
-    Notification,
-    LowBattery,
-    SendIconLauncher,
-    EmptyTrash,
-    Plugin,
-    Plugout,
-    RemoveDevConnected,
-    RemovableDevRemoved,
-    ErrorSound,
+    // Notification,
+    // LowBattery,
+    // SendIconLauncher,
+    // EmptyTrash,
+    // Plugin,
+    // Plugout,
+    // RemoveDevConnected,
+    // RemovableDevRemoved,
+    // ErrorSound,
+}
+impl SoundEffectType {
+    const ALL: [SoundEffectType; 5] = [
+        SoundEffectType::Bootup,
+        SoundEffectType::ShutDown,
+        SoundEffectType::Logout,
+        SoundEffectType::Wakeup,
+        SoundEffectType::VolumnUpDown,
+        // SoundEffectType::Notification,
+        // SoundEffectType::LowBattery,
+        // SoundEffectType::SendIconLauncher,
+        // SoundEffectType::EmptyTrash,
+        // SoundEffectType::Plugin,
+        // SoundEffectType::Plugout,
+        // SoundEffectType::RemoveDevConnected,
+        // SoundEffectType::RemovableDevRemoved,
+        // SoundEffectType::RemovableDevRemoved,
+    ];
+}
+impl fmt::Display for SoundEffectType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                SoundEffectType::Bootup => "Bootup",
+                SoundEffectType::ShutDown => "Shutdown",
+                SoundEffectType::Logout => "Log out",
+                SoundEffectType::Wakeup => "Wake Up",
+                SoundEffectType::VolumnUpDown => "Volume +/-",
+                // SoundEffectType::Notification => "Notifications",
+                // SoundEffectType::LowBattery => "Low battery",
+                // SoundEffectType::SendIconLauncher => "Send icon in Launcher to Desktop",
+                // SoundEffectType::EmptyTrash => "Empty Trash",
+                // SoundEffectType::Plugin => "Plug in",
+                // SoundEffectType::Plugout => "Plug out",
+                // SoundEffectType::RemoveDevConnected => "Removable device connected",
+                // SoundEffectType::RemovableDevRemoved => "Removable device removed",
+                // SoundEffectType::ErrorSound => "Error",
+            }
+        )
+    }
 }
 impl Default for SoundEffectType {
     fn default() -> Self {
@@ -163,6 +209,7 @@ impl Default for OutputDevice {
 impl OutputDevice {
     const ALL: [OutputDevice; 2] = [OutputDevice::Internal, OutputDevice::External];
 }
+
 impl fmt::Display for OutputDevice {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -188,6 +235,7 @@ impl Default for InputDevice {
 impl InputDevice {
     const ALL: [InputDevice; 2] = [InputDevice::Internal, InputDevice::External];
 }
+
 impl fmt::Display for InputDevice {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -201,35 +249,18 @@ impl fmt::Display for InputDevice {
     }
 }
 
-// impl Sound {
-//     fn repsonsive_font(&mut self, w: u32) {
-//         match w {
-//             500..=599 => {
-//                 if self.FONT_SIZE <= 8 {
-//                     self.FONT_SIZE = 8;
-//                 } else {
-//                     self.FONT_SIZE -= 4;
-//                 }
-//             }
-//             600..=665 => {
-//                 if self.FONT_SIZE <= 8 {
-//                     self.FONT_SIZE = 8;
-//                 } else {
-//                     self.FONT_SIZE -= 4;
-//                 }
-//             }
-//             666..=1920 => {
-//                 if self.FONT_SIZE >= 18 {
-//                     self.FONT_SIZE = 12;
-//                 } else {
-//                     self.FONT_SIZE += 1;
-//                 }
-//             }
-//             _ => {}
-//         }
+// impl Index<String> for SettingsSoundEffect {
+//     type Output = PathBuf;
+//     fn index(&self, key: String) -> &PathBuf {
+//         &self.hash_sounds.index(&key)
 //     }
 // }
-
+impl Index<&SoundEffectType> for SettingsSoundEffect {
+    type Output = PathBuf;
+    fn index(&self, key: &SoundEffectType) -> &Self::Output {
+        &self.hash_sounds.index(&key)
+    }
+}
 impl Application for Sound {
     type Executor = executor::Default;
     type Flags = ();
@@ -246,24 +277,48 @@ impl Application for Sound {
             str_con("Log out"),
             str_con("Wake Up"),
             str_con("Volume +/-"),
-            str_con("Notifications"),
-            str_con("Low battery"),
-            str_con("Send icon in Launcher to Desktop"),
-            str_con("Empty Trash"),
-            str_con("Plug in"),
-            str_con("Plug out"),
-            str_con("Removeable device connected"),
-            str_con("Removable device removed"),
-            str_con("Error"),
+            // str_con("Notifications"),
+            // str_con("Low battery"),
+            // str_con("Send icon in Launcher to Desktop"),
+            // str_con("Empty Trash"),
+            // str_con("Plug in"),
+            // str_con("Plug out"),
+            // str_con("Removeable device connected"),
+            // str_con("Removable device removed"),
+            // str_con("Error"),
         ];
         let mut vec_tuple: Vec<(button::State, button::State, String)> = Vec::new();
         vec_sounds.iter_mut().for_each(|name| {
             vec_tuple.push((button::State::new(), button::State::new(), name.clone()))
         });
+        let mut sound_effect_hash: HashMap<SoundEffectType, PathBuf> = HashMap::new();
+        match playback::read_directory(
+            std::path::PathBuf::new()
+                .join(standart_path::sys_data_dir().unwrap().join("syssettings")),
+        ) {
+            Ok(mut path) =>
+            {
+                #[allow(const_item_mutation)]
+                for (i, j) in SoundEffectType::ALL[..].iter_mut().zip(path.iter_mut()) {
+                    sound_effect_hash.insert(*i, j.to_path_buf());
+                }
+            }
+            Err(e) => println!("Error: {}", e),
+        }
+        for (i, j) in &sound_effect_hash {
+            println!("key: {} value: {:?}", i, j);
+        }
+        println!(
+            "Booup value: {:?}",
+            sound_effect_hash.index(&SoundEffectType::Bootup)
+        );
         (
             Self {
                 FONT_SIZE: 12,
-                sound_effecs: SettingsSoundEffect::new(),
+                sound_effecs: SettingsSoundEffect {
+                    hash_sounds: sound_effect_hash,
+                    ..Default::default()
+                },
                 enable_sound_effect: true,
                 sample_effects: vec_tuple,
                 ..Default::default()
@@ -321,6 +376,11 @@ impl Application for Sound {
             }
             SoundMessage::SoundOutChanged(val) => {
                 self.out_value = val;
+                SoundBackEnd::initialize();
+                Command::none()
+            }
+            SoundMessage::InputLevelChanged(val) => {
+                self.input_level = val;
                 Command::none()
             }
             SoundMessage::WindowResize((w, h)) => {
@@ -331,6 +391,15 @@ impl Application for Sound {
             }
             SoundMessage::SoundInChanged(val) => {
                 self.input_val = val;
+                Command::none()
+            }
+            SoundMessage::TestSoundEffect(idx) => {
+                let key = SoundEffectType::ALL[idx];
+                let value = self.sound_effecs.hash_sounds.index(&key);
+                match playback::run(&value) {
+                    Ok(()) => println!("sucesss"),
+                    Err(e) => println!("Error: {}", e),
+                }
                 Command::none()
             }
             SoundMessage::CloseApp => {
@@ -347,7 +416,6 @@ impl Application for Sound {
             }
             SoundMessage::EnableEffect(idx) => {
                 self.effect_tick = idx;
-                PlaySound::run();
                 Command::none()
             }
             SoundMessage::AutomatedSoundSuppression(is_auto) => {
@@ -453,7 +521,7 @@ impl Application for Sound {
                                     Slider::new(
                                         &mut self.slider_output,
                                         0.0..=100.0,
-                                        self.input_val,
+                                        self.out_value,
                                         SoundMessage::SoundOutChanged,
                                     ).style(SliderStyle::Circle)
                                     .step(1.0)
@@ -511,11 +579,12 @@ impl Application for Sound {
                 .style(ContainerStyle::LightGrayCircle),
             );
         let input_content = Column::new()
-            .push(Container::new(Text::new("Input").size(self.FONT_SIZE + 12)).padding(10))
+            .push(Container::new(Text::new("Input").size(self.FONT_SIZE + 12)))
             .spacing(10)
             .push(
                 Container::new(
                     Row::new()
+                        .width(Length::Fill)
                         .align_items(Align::Center)
                         .spacing(10)
                         .push(Text::new("Input Devices"))
@@ -599,50 +668,59 @@ impl Application for Sound {
         let sound_effects = Column::new()
             .spacing(10)
             .push(
-                Row::new()
-                    .spacing(10)
-                    .push(Text::new("Sound Effects"))
-                    .push(Space::with_width(Length::Fill))
-                    .push(Toggler::new(
-                        self.is_sound_effect,
-                        String::from(""),
-                        SoundMessage::SoundEffect,
-                    )),
+                Container::new(
+                    Row::new()
+                        .align_items(Align::Center)
+                        .spacing(10)
+                        .push(Text::new("Sound Effects"))
+                        .push(Space::with_width(Length::Fill))
+                        .push(Toggler::new(
+                            self.is_sound_effect,
+                            String::from(""),
+                            SoundMessage::SoundEffect,
+                        )),
+                )
+                .padding(10)
+                .style(ContainerStyle::LightGrayCircle),
             )
-            .push(self.sample_effects.iter_mut().enumerate().fold(
-                Column::new().spacing(10).align_items(Align::Center),
-                |col_sound, (idx, (enable_state, state, name))| {
-                    col_sound.push(
-                        Row::new()
-                            .align_items(Align::Center)
-                            .spacing(10)
-                            .width(Length::Fill)
-                            .push(
-                                Button::new(
-                                    enable_state,
-                                    Row::new().push(Text::new(name.as_str())),
-                                )
+            .push(if self.is_sound_effect {
+                self.sample_effects.iter_mut().enumerate().fold(
+                    Column::new().spacing(10).align_items(Align::Center),
+                    |col_sound, (idx, (enable_state, state, name))| {
+                        col_sound.push(
+                            Row::new()
+                                .align_items(Align::Center)
+                                .spacing(10)
                                 .width(Length::Fill)
-                                .style(ButtonStyle::Transparent)
-                                .on_press(SoundMessage::TestSoundEffect),
-                            )
-                            // .push(Space::with_width(Length::Fill))
-                            .push(
-                                Button::new(
-                                    state,
-                                    Icon::new(if effect_enable && current_tick == idx {
-                                        '\u{f058}'
-                                    } else {
-                                        '\u{f111}'
-                                    }),
+                                .push(
+                                    Button::new(
+                                        enable_state,
+                                        Row::new().push(Text::new(name.as_str())),
+                                    )
+                                    .width(Length::Fill)
+                                    .style(ButtonStyle::Transparent)
+                                    .on_press(SoundMessage::TestSoundEffect(idx)),
                                 )
-                                .padding(4)
-                                .style(ButtonStyle::Transparent)
-                                .on_press(SoundMessage::EnableEffect(idx)),
-                            ),
-                    )
-                },
-            ));
+                                // .push(Space::with_width(Length::Fill))
+                                .push(
+                                    Button::new(
+                                        state,
+                                        Icon::new(if effect_enable && current_tick == idx {
+                                            '\u{f058}'
+                                        } else {
+                                            '\u{f111}'
+                                        }),
+                                    )
+                                    .padding(4)
+                                    .style(ButtonStyle::Transparent)
+                                    .on_press(SoundMessage::EnableEffect(idx)),
+                                ),
+                        )
+                    },
+                )
+            } else {
+                Column::new()
+            });
         // f058 tick-circle
         // f111 circle
         let contnet = Column::new()
@@ -699,7 +777,7 @@ fn tab_content<'l>(unicode: char, name: &str) -> Row<'l, SoundMessage> {
 pub fn init() -> iced::Result {
     Sound::run(Settings {
         window: window::Settings {
-            size: (400, 400),
+            size: (800, 800),
             min_size: Some((300, 800)),
             max_size: Some((800, 800)),
             ..Default::default()
@@ -715,92 +793,127 @@ fn main() {
     }
 }
 
-mod PlaySound {
+mod playback {
 
-    use sdl2::audio::{self, AudioCallback, AudioDevice, AudioSpecDesired, AudioSpecWAV};
-    use sdl2::Sdl;
+    use sdl2::audio::{AudioCVT, AudioCallback, AudioSpecDesired, AudioSpecWAV};
+    use std::fs::read_dir;
+    use std::path::PathBuf;
     use std::time::Duration;
-
-    pub struct CopiedData {
-        bytes: Vec<u8>,
-        position: usize,
-    }
-    impl AudioCallback for CopiedData {
-        type Channel = u8;
-        fn callback(&mut self, data: &mut [u8]) {
-            let (start, end) = (self.position, self.position + data.len());
-            self.position += data.len();
-            let audio_data = &self.bytes[start..end];
-            for (src, dst) in audio_data.iter().zip(data.iter_mut()) {
-                *dst = *src;
-            }
-        }
-    }
-    struct WrappedData {
-        audio: AudioSpecWAV,
-        position: usize,
-    }
-    impl AudioCallback for WrappedData {
-        type Channel = u8;
-        fn callback(&mut self, data: &mut [u8]) {
-            let (start, end) = (self.position, self.position + data.len());
-            self.position += data.len();
-            let audio_data = &self.audio.buffer()[start..end];
-            for (src, dst) in audio_data.iter().zip(data.iter_mut()) {
-                *dst = *src;
-            }
-        }
-    }
-    struct SquareWave {
-        phase_inc: f32,
-        phase: f32,
+    // NOTE: You probably want to investigate the
+    // mixer feature for real use cases.
+    struct Sound {
+        data: Vec<u8>,
         volume: f32,
+        pos: usize,
     }
 
-    impl AudioCallback for SquareWave {
-        type Channel = f32;
+    pub fn read_directory(in_path: std::path::PathBuf) -> Result<Vec<PathBuf>, std::io::Error> {
+        let mut list_sounds: Vec<PathBuf> = Vec::new();
+        let sound_dir = "sounds";
+        if in_path.join(sound_dir).exists() {
+            for path in read_dir(in_path.join(sound_dir))? {
+                let dir = path?;
+                list_sounds.push(dir.path());
+            }
+        } else {
+            make_dir(&in_path, sound_dir)?;
+            let paths = read_dir(in_path)?;
+            paths.for_each(|val| {
+                println!("Name: {:?}", val);
+            });
+        }
+        Ok(list_sounds)
+    }
+    pub fn make_dir(in_path: &std::path::PathBuf, name: &str) -> Result<bool, std::io::Error> {
+        std::fs::create_dir(in_path.join(name))?;
+        Ok(true)
+    }
 
-        fn callback(&mut self, out: &mut [f32]) {
-            // Generate a square wave
-            for x in out.iter_mut() {
-                *x = if self.phase <= 0.8 {
-                    self.volume
-                } else {
-                    -self.volume
-                };
-                self.phase = (self.phase + self.phase_inc) % 1.0;
+    impl AudioCallback for Sound {
+        type Channel = u8;
+
+        fn callback(&mut self, out: &mut [u8]) {
+            for dst in out.iter_mut() {
+                // With channel type u8 the "silence" value is 128 (middle of the 0-2^8 range) so we need
+                // to both fill in the silence and scale the wav data accordingly. Filling the silence
+                // once the wav is finished is trivial, applying the volume is more tricky. We need to:
+                // * Change the range of the values from [0, 255] to [-128, 127] so we can multiply
+                // * Apply the volume by multiplying, this gives us range [-128*volume, 127*volume]
+                // * Move the resulting range to a range centered around the value 128, the final range
+                //   is [128 - 128*volume, 128 + 127*volume] – scaled and correctly positioned
+                //
+                // Using value 0 instead of 128 would result in clicking. Scaling by simply multiplying
+                // would not give correct results.
+                let pre_scale = *self.data.get(self.pos).unwrap_or(&128);
+                let scaled_signed_float = (pre_scale as f32 - 128.0) * self.volume;
+                let scaled = (scaled_signed_float + 128.0) as u8;
+                *dst = scaled;
+                self.pos += 1;
             }
         }
     }
+    pub fn run(path: &std::path::PathBuf) -> Result<(), String> {
+        let sdl_context = sdl2::init().unwrap();
+        let audio_subsystem = sdl_context.audio().unwrap();
+        let desired_spec = AudioSpecDesired {
+            freq: Some(44_100),
+            channels: Some(1), // mono
+            samples: None,     // default
+        };
+        let device = audio_subsystem
+            .open_playback(None, &desired_spec, |spec| {
+                let wav = AudioSpecWAV::load_wav(path).expect("Could not load test WAV file");
+                let cvt = AudioCVT::new(
+                    wav.format,
+                    wav.channels,
+                    wav.freq,
+                    spec.format,
+                    spec.channels,
+                    spec.freq,
+                )
+                .expect("Could not convert WAV file");
+                let data = cvt.convert(wav.buffer().to_vec());
+                // initialize the audio callback
+                Sound {
+                    data: data,
+                    volume: 0.50,
+                    pos: 0,
+                }
+            })
+            .unwrap();
+        // Start playback
+        device.resume();
+        // std::thread::spawn(|| {
+        // Play for a second
+        std::thread::sleep(Duration::from_millis(1_000));
+        // });
 
-    unsafe impl Send for WrappedData {}
-    pub fn run() {
-        let handler = std::thread::spawn(move || {
-            let sdl_context = sdl2::init().unwrap();
-            let audio_subsystem = sdl_context.audio().unwrap();
-            let desired_spec = AudioSpecDesired {
-                freq: Some(44100),
-                channels: Some(1), // mono
-                samples: None,     // default sample size
-            };
-            let device = audio_subsystem
-                .open_playback(None, &desired_spec, |spec| {
-                    // initialize the audio callback
-                    SquareWave {
-                        phase_inc: 440.0 / spec.freq as f32,
-                        phase: 0.0,
-                        volume: 0.25,
-                    }
-                })
-                .unwrap();
-            // Start playback
-            device.resume();
-            // Play for 2 seconds
-            // std::thread::sleep(Duration::from_millis(1000));
-        });
-        match handler.join() {
-            Ok(()) => println!("run success"),
-            Err(e) => println!("thread crashed: {:?} ", e),
-        }
+        // Device is automatically closed when dropped
+
+        Ok(())
+    }
+}
+
+mod standart_path {
+    use std::path::PathBuf;
+    pub fn sys_data_dir() -> Option<PathBuf> {
+        Some(PathBuf::new().join("/usr/share/"))
+    }
+}
+
+mod SoundBackEnd {
+
+    pub fn initialize() {}
+    pub fn volume_up(level: u32) {}
+    pub fn volumn_down(level: u32) {}
+    pub fn mute_sound(is_mute: bool) {}
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn sound_test() {
+        println!("{}", Volume::MAX);
+        assert_eq!(2 + 2, 3);
     }
 }
