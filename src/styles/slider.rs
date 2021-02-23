@@ -3,7 +3,7 @@ use iced_core::Color;
 
 pub enum SliderStyle {
     Default,
-    Circle,
+    Circle(f32),
 }
 
 impl StyleSheet for SliderStyle {
@@ -19,7 +19,9 @@ impl StyleSheet for SliderStyle {
                         width: 24,
                         border_radius: 8.0,
                     },
-                    SliderStyle::Circle => HandleShape::Circle { radius: 12.0 },
+                    SliderStyle::Circle(input_radius) => HandleShape::Circle {
+                        radius: *input_radius,
+                    },
                 },
                 color: Color::from_rgba8(128, 139, 150, 1.5),
                 border_color: Color::from_rgba8(44, 62, 80, 1.0),
