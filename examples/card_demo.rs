@@ -1,7 +1,6 @@
 use iced_custom_widget as cw;
-use cw::components::card::{self, Card};
-use cw::components::stepper::{self, Stepper};
-use cw::styles::custom_card::CustomCard;
+use cw::card::{self, Card};
+use cw::stepper::{self, Stepper};
 use iced::{pick_list, Column, Container, Element, Length, PickList, Sandbox, Settings, Text};
 use smart_default::SmartDefault;
 use std::fmt::{Display, Formatter, Result};
@@ -58,15 +57,14 @@ pub struct CardDemo {
 
 #[derive(SmartDefault)]
 pub struct ScaleState {
-   #[default(1.0)]
    scale: f32,
-   decrease_btn_state: stepper::State,
-   increase_btn_state: stepper::State,
+   stepper_state: stepper::State,
 }
 impl CardDemo {
    pub fn init() -> iced::Result {
+      std::env::set_var("WINIT_X11_SCALE_FACTOR", "1.2");
       CardDemo::run(Settings {
-         default_text_size: 13,
+         // default_text_size: 13,
          ..Settings::default()
       })
    }
@@ -120,17 +118,13 @@ impl Sandbox for CardDemo {
          .footer(footer)
          .spacing(20)
          .padding(10)
-         .on_pressed(Self::Message::OnCardPressed)
-         .style(CustomCard::Default);
+         .on_pressed(Self::Message::OnCardPressed);
       let resizer = Stepper::new(
+         &mut self.scale_state.stepper_state,
          self.scale_state.scale,
-         &mut self.scale_state.decrease_btn_state,
-         &mut self.scale_state.increase_btn_state,
+         50.50,
          Self::Message::ScaleChanged,
-      )
-      .step(0.1)
-      .min(0.5)
-      .max(2.);
+      ).step(2.5);
       let col = Column::new().push(card).push(resizer).push(pick_list);
       Container::new(col)
          .width(Length::Fill)

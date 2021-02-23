@@ -9,8 +9,9 @@ pub mod stack;
 pub mod stepper;
 pub mod tab;
 pub mod table;
-pub mod table_bk;
 pub mod toggler;
+pub mod number_input;
+
 pub use card::Card;
 pub use grid::Grid;
 pub use icon::Icon;
@@ -21,4 +22,4 @@ pub use stepper::Stepper;
 pub use tab::Tab;
 pub use table::{Table, TableColumn, TableData, TableError, TableOptions, TableOrder, TableResult};
 pub use toggler::Toggler;
-pub use table_bk::{table_column, table_header};
+pub use number_input::NumberInput;

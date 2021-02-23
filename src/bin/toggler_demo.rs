@@ -6,7 +6,7 @@ use iced::{
     Length, Settings, Subscription, Text,
 };
 use iced_custom_widget as icw;
-use icw::components::Toggler;
+use icw::Toggler;
 #[derive(Default, Debug)]
 pub struct Event {
     last: Vec<iced_native::Event>,

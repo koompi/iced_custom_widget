@@ -1,65 +1,71 @@
 use crate::styles::stepper::StyleSheet;
+use std::fmt::Display;
 use iced_graphics::Primitive;
 use iced_native::{
    button, container,
    event::{self, Event},
    layout::{Limits, Node},
-   mouse, row, text, Align, Background, Clipboard, Color, Container, Element, Hasher, HorizontalAlignment, Layout, Length,
-   Point, Rectangle, Row, Text, VerticalAlignment, Widget,
+   mouse, row, text, Align, Background, Clipboard, Color, Container, Element, Hasher,
+   HorizontalAlignment, Layout, Length, Point, Rectangle, Row, Text, VerticalAlignment, Widget,
 };
+use num_traits::{Num, NumAssignOps};
 
-pub struct Stepper<'a, Message, Renderer: self::Renderer + text::Renderer> {
-   value: f32,
-   step: f32,
-   min: f32,
-   max: f32,
+pub struct Stepper<'a, T, Message, Renderer: self::Renderer + text::Renderer> {
+   state: &'a mut State,
+   value: T,
+   step: T,
+   min: T,
+   max: T,
    spacing: u16,
    padding: u16,
    value_width: Option<u16>,
    text_size: Option<u16>,
-   decrease_btn_state: &'a mut State,
-   increase_btn_state: &'a mut State,
-   on_changed: Box<dyn Fn(f32) -> Message + 'a>,
+   on_changed: Box<dyn Fn(T) -> Message + 'a>,
    font: Renderer::Font,
    style: Renderer::Style,
 }
 
-impl<'a, Message, Renderer> Stepper<'a, Message, Renderer>
+impl<'a, T, Message, Renderer> Stepper<'a, T, Message, Renderer>
 where
+   T: Num,
    Renderer: text::Renderer + self::Renderer,
 {
-   pub fn new<F>(value: f32, decrease_btn_state: &'a mut State, increase_btn_state: &'a mut State, on_changed: F) -> Self
+   pub fn new<F>(
+      state: &'a mut State,
+      value: T,
+      max: T,
+      on_changed: F,
+   ) -> Self
    where
-      F: 'static + Fn(f32) -> Message,
+      F: 'static + Fn(T) -> Message,
    {
       Self {
+         state,
          value,
-         step: 1.,
-         min: 0.,
-         max: 100.,
+         step: T::one(),
+         min: T::zero(),
+         max,
          spacing: 0,
          padding: Renderer::DEFAULT_PADDING,
          value_width: None,
          text_size: None,
-         decrease_btn_state,
-         increase_btn_state,
          on_changed: Box::new(on_changed),
          font: Renderer::Font::default(),
          style: Renderer::Style::default(),
       }
    }
 
-   pub fn step(mut self, step: f32) -> Self {
+   pub fn step(mut self, step: T) -> Self {
       self.step = step;
       self
    }
 
-   pub fn min(mut self, min: f32) -> Self {
+   pub fn min(mut self, min: T) -> Self {
       self.min = min;
       self
    }
 
-   pub fn max(mut self, max: f32) -> Self {
+   pub fn max(mut self, max: T) -> Self {
       self.max = max;
       self
    }
@@ -95,8 +101,9 @@ where
    }
 }
 
-impl<'a, Message, Renderer> Widget<Message, Renderer> for Stepper<'a, Message, Renderer>
+impl<'a, T, Message, Renderer> Widget<Message, Renderer> for Stepper<'a, T, Message, Renderer>
 where
+   T: Num + NumAssignOps + PartialOrd + Display + Copy,
    Renderer: self::Renderer + text::Renderer + container::Renderer + row::Renderer,
 {
    fn width(&self) -> Length {
@@ -112,17 +119,21 @@ where
          .width(Length::Shrink)
          .height(Length::Shrink)
          .pad(f32::from(self.padding));
-      let mut value = Container::<(), Renderer>::new(Text::new(format!("{:.2}", self.value)).size(renderer.default_size()))
-         .center_y()
-         .center_x()
-         .padding(self.padding);
+      let mut value = Container::<(), Renderer>::new(
+         Text::new(format!("{}", self.value)).size(renderer.default_size()),
+      )
+      .center_y()
+      .center_x()
+      .padding(self.padding);
 
       if let Some(width) = self.value_width {
          value = value.width(Length::Units(width));
       }
 
       // size is width & height of button (text_size + padding * 2)
-      let size = self.text_size.unwrap_or(renderer.default_size() + (self.padding * 2));
+      let size = self
+         .text_size
+         .unwrap_or(renderer.default_size() + (self.padding * 2));
       Row::<(), Renderer>::new()
          .width(Length::Shrink)
          .spacing(self.spacing)
@@ -160,22 +171,22 @@ where
          renderer,
          defaults,
          value_bounds,
-         format!("{:.2}", self.value).as_str(),
+         format!("{}", self.value).as_str(),
          self.text_size.unwrap_or(renderer.default_size()),
          self.font,
          None,
          HorizontalAlignment::Center,
          VerticalAlignment::Center,
       );
-      let is_decrease_disabled = self.value == self.min;
-      let is_increase_disabled = self.value == self.max;
+      let is_decrease_disabled = self.value <= self.min;
+      let is_increase_disabled = self.value >= self.max;
 
       self::Renderer::draw(
          renderer,
          cursor_position,
-         self.decrease_btn_state.is_pressed,
+         self.state.decrease_pressed,
          is_decrease_disabled,
-         self.increase_btn_state.is_pressed,
+         self.state.increase_pressed,
          is_increase_disabled,
          decrease_btn_bounds,
          value_bounds,
@@ -218,17 +229,19 @@ where
                let increase_btn_layout = children.next().unwrap();
 
                if decrease_btn_layout.bounds().contains(cursor_position) {
-                  self.decrease_btn_state.is_pressed = true;
-                  self.value -= self.step;
-                  if self.value < self.min {
+                  self.state.decrease_pressed = true;
+                  if self.value <= self.min {
                      self.value = self.min
+                  } else {
+                     self.value -= self.step;
                   }
                   messages.push((self.on_changed)(self.value));
                } else if increase_btn_layout.bounds().contains(cursor_position) {
-                  self.increase_btn_state.is_pressed = true;
-                  self.value += self.step;
-                  if self.value > self.max {
+                  self.state.increase_pressed = true;
+                  if self.value >= self.max {
                      self.value = self.max
+                  } else {
+                     self.value += self.step;
                   }
                   messages.push((self.on_changed)(self.value));
                } else {
@@ -245,9 +258,9 @@ where
                let _value_layout = children.next().unwrap();
                let increase_btn_layout = children.next().unwrap();
                if decrease_btn_layout.bounds().contains(cursor_position) {
-                  self.decrease_btn_state.is_pressed = false;
+                  self.state.decrease_pressed = false;
                } else if increase_btn_layout.bounds().contains(cursor_position) {
-                  self.increase_btn_state.is_pressed = false;
+                  self.state.increase_pressed = false;
                } else {
                   event_status = event::Status::Ignored;
                }
@@ -261,7 +274,8 @@ where
 
 #[derive(Default, Clone, Copy, Debug)]
 pub struct State {
-   is_pressed: bool,
+   decrease_pressed: bool,
+   increase_pressed: bool,
 }
 
 pub trait Renderer: iced_native::Renderer + text::Renderer {
@@ -283,8 +297,7 @@ pub trait Renderer: iced_native::Renderer + text::Renderer {
    ) -> Self::Output;
 }
 
-impl Renderer for iced_wgpu::Renderer
-{
+impl Renderer for iced_wgpu::Renderer {
    type Style = Box<dyn StyleSheet>;
    const DEFAULT_PADDING: u16 = 8;
    fn draw(
@@ -396,7 +409,7 @@ impl Renderer for iced_wgpu::Renderer
          Primitive::Group {
             primitives: vec![decrease_btn, value_container, increase_btn],
          },
-         if mouse_over_decrease || mouse_over_increase {
+         if (mouse_over_decrease && !is_decrease_disabled) || (mouse_over_increase && !is_increase_disabled) {
             mouse::Interaction::Pointer
          } else {
             mouse::Interaction::default()
@@ -405,12 +418,14 @@ impl Renderer for iced_wgpu::Renderer
    }
 }
 
-impl<'a, Message, Renderer> From<Stepper<'a, Message, Renderer>> for Element<'a, Message, Renderer>
+impl<'a, T, Message, Renderer> From<Stepper<'a, T, Message, Renderer>>
+   for Element<'a, Message, Renderer>
 where
+   T: 'a + Num + NumAssignOps + PartialOrd + Display + Copy,
    Message: 'a,
    Renderer: 'a + self::Renderer + text::Renderer + container::Renderer + row::Renderer + button::Renderer,
 {
-   fn from(stepper: Stepper<'a, Message, Renderer>) -> Self {
+   fn from(stepper: Stepper<'a, T, Message, Renderer>) -> Self {
       Element::new(stepper)
    }
 }
