@@ -3,6 +3,7 @@ use cw::components::icon_brand::IconBrand;
 use cw::utils::Theme;
 use cw::styles::custom_styles::CustomButton;
 use iced::{button, Align, Button, Column, Container, Element, Text};
+
 #[derive(Debug, Clone)]
 pub struct App {
    pub icon: char,

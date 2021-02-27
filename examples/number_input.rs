@@ -1,9 +1,6 @@
 use iced_custom_widget as cw;
 use cw::components::number_input::{self, NumberInput};
-use cw::utils::Theme;
-use cw::styles::custom_styles::CustomTextInput;
-use iced::{Container, Element, Length, Sandbox, Settings, Text, Row, Align};
-use style::CustomNumInput;
+use iced::{Container, Element, Length, Sandbox, Settings, Text, Row, Align, window};
 
 #[derive(Default)]
 pub struct NumberInputDemo {
@@ -16,6 +13,10 @@ impl NumberInputDemo {
       std::env::set_var("WINIT_X11_SCALE_FACTOR", "1.2");
       NumberInputDemo::run(Settings {
          default_text_size: 14,
+         window: window::Settings {
+            size: (250, 200),
+            ..Default::default()
+         },
          ..Settings::default()
       })
    }
@@ -50,14 +51,14 @@ impl Sandbox for NumberInputDemo {
       let txt_minute = NumberInput::new(
          &mut self.state,
          self.value,
-         60,
+         255,
          Self::Message::NumInpChanged,
-      ).step(2).min(1).style(CustomNumInput).input_style(CustomTextInput::Default(Theme::light().palette));
+      );
       Container::new(
          Row::new().spacing(10).align_items(Align::Center)
          .push(lb_minute)
          .push(txt_minute)
-      ).width(Length::Fill).height(Length::Fill).into()
+      ).width(Length::Fill).height(Length::Fill).center_x().center_y().into()
    }
 }
 #[allow(unused_must_use)]
