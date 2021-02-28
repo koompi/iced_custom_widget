@@ -1,5 +1,4 @@
 pub mod card;
-pub mod outline_button;
 pub mod stepper;
 pub mod tab;
 pub mod table_row;
