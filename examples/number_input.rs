@@ -5,7 +5,7 @@ use iced::{Container, Element, Length, Sandbox, Settings, Text, Row, Align, wind
 #[derive(Default)]
 pub struct NumberInputDemo {
    state: number_input::State,
-   value: u8
+   value: f32
 }
 
 impl NumberInputDemo {
@@ -24,7 +24,7 @@ impl NumberInputDemo {
 
 #[derive(Debug, Clone)]
 pub enum NumInpMessage {
-   NumInpChanged(u8),
+   NumInpChanged(f32),
 }
 
 impl Sandbox for NumberInputDemo {
@@ -51,9 +51,9 @@ impl Sandbox for NumberInputDemo {
       let txt_minute = NumberInput::new(
          &mut self.state,
          self.value,
-         255,
+         255.0,
          Self::Message::NumInpChanged,
-      );
+      ).step(1.5);
       Container::new(
          Row::new().spacing(10).align_items(Align::Center)
          .push(lb_minute)

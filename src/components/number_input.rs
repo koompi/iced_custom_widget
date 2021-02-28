@@ -3,7 +3,7 @@ use std::fmt::Display;
 use std::str::FromStr;
 use iced_graphics::Primitive;
 use iced_native::{
-   container, event::{self, Event}, mouse, text_input::{self, Value}, column, row, keyboard, layout::{Limits, Node}, 
+   container, event::{self, Event}, mouse, text_input::{self, Value, cursor}, column, row, keyboard, layout::{Limits, Node}, 
    Align, Background, Clipboard, Color, Container, Element, Hasher, TextInput, Size, Column,
    HorizontalAlignment, Layout, Length, Point, Rectangle, Text, VerticalAlignment, Widget, Row,
 };
@@ -255,29 +255,11 @@ where
                Event::Keyboard(keyboard::Event::CharacterReceived(c)) 
                   if self.content.state().is_focused() && c.is_numeric() => {
                      let mut new_val = self.value.to_string();
-                     let text_bounds = content.children().next().unwrap().bounds();
-                     let target = cursor_position.x - text_bounds.x;
-                     println!("{} - {} = {}", cursor_position.x, text_bounds.x, target);
-                     let position = if target > 0.0 {
-                        renderer.find_cursor_position(
-                           text_bounds,
-                           self.font,
-                           self.size,
-                           &Value::new(&new_val),
-                           &self.content.state(),
-                           target,
-                        )
-                     } else {
-                        0
-                     };
-                     println!("old val: {}", self.value);
-                     println!("cursor idx: {}", position);
-                     if self.value.eq(&T::zero()) {
-                        new_val = c.to_string()
-                     } else {
-                        new_val.insert(position, c);
+                     match self.content.state().cursor().state(&Value::new(&new_val)) {
+                        cursor::State::Index(idx) => new_val.insert(idx, c),
+                        cursor::State::Selection{start, end} => new_val.replace_range(start..end, &c.to_string()),
                      }
-                     println!("new val: {}", new_val);
+                     
                      match T::from_str(&new_val) {
                         Ok(val) => {
                            if (self.bound.0..=self.bound.1).contains(&val) {
