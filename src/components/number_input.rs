@@ -324,7 +324,7 @@ pub trait Renderer: text_input::Renderer {
    ) -> Self::Output;
 }
 
-impl Renderer for iced_wgpu::Renderer {
+impl Renderer for iced_wgpu::Renderer { 
    type Style = Box<dyn StyleSheet>;
    const DEFAULT_PADDING: u16 = 5;
    fn draw(&mut self, cursor_position: Point, state: &ModifierState, inc_bounds: Rectangle,

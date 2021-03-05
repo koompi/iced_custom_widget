@@ -256,8 +256,7 @@ pub trait Renderer: iced_native::Renderer {
    ) -> Self::Output;
 }
 
-impl Renderer for iced_wgpu::Renderer
-{
+impl Renderer for iced_wgpu::Renderer {
    type Style = Box<dyn StyleSheet>;
 
    const DEFAULT_PADDING: u16 = 8;

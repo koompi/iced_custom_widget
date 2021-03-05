@@ -6,10 +6,10 @@ edition = "2018"
 
 [dependencies]
 iced = {version = "0.2", features = ["debug", "svg"]}
-iced_native = "0.3.0"
-iced_wgpu = "0.3.0"
-iced_graphics = "0.1.0"
-iced_core = "0.3.0"
+iced_native = "0.3"
+iced_wgpu = "0.3"
+iced_graphics = "0.1"
+iced_core = "0.3"
 
 serde = { version = "1.0.117", features=['derive'] }
 serde_yaml = "0.8.14"
