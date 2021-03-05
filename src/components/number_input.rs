@@ -3,7 +3,7 @@ use std::fmt::Display;
 use std::str::FromStr;
 use iced_graphics::Primitive;
 use iced_native::{
-   container, event::{self, Event}, mouse, text_input, column, row, keyboard, layout::{Limits, Node}, 
+   container, event::{self, Event}, mouse, text_input::{self, Value, cursor}, column, row, keyboard, layout::{Limits, Node}, 
    Align, Background, Clipboard, Color, Container, Element, Hasher, TextInput, Size, Column,
    HorizontalAlignment, Layout, Length, Point, Rectangle, Text, VerticalAlignment, Widget, Row,
 };
@@ -28,18 +28,17 @@ where
    Message: Clone,
    Renderer: self::Renderer,
 {
-   pub fn new<F>(
-      state: &'a mut State,
-      value: T,
-      max: T,
-      on_changed: F,
-   ) -> Self
+   pub fn new<F>(state: &'a mut State, value: T, max: T, on_changed: F) -> Self
    where
       F: 'static + Fn(T) -> Message + Copy,
       T: 'static
    {
       let State {input_state, mod_state} = state;
       let padding = <Renderer as self::Renderer>::DEFAULT_PADDING;
+      let convert_to_num = move |s: String| on_changed(
+         T::from_str(&s).unwrap_or(if s.is_empty() {T::zero()} else {value})
+      );
+
       Self {
          state: mod_state,
          value,
@@ -47,7 +46,7 @@ where
          bound: (T::zero(), max),
          padding,
          size: None,
-         content: TextInput::new(input_state, "", format!("{}", value).as_str(), move |s| on_changed(T::from_str(&s).unwrap_or(value))).padding(padding).width(Length::Units(127)),
+         content: TextInput::new(input_state, "", format!("{}", value).as_str(), convert_to_num).padding(padding).width(Length::Units(127)),
          on_change: Box::new(on_changed),
          style: <Renderer as self::Renderer>::Style::default(),
          font: Default::default(),
@@ -69,6 +68,13 @@ where
    pub fn max(mut self, max: T) -> Self {
       if max > self.bound.0 {
          self.bound.1 = max;
+      }
+      self
+   }
+
+   pub fn bound(mut self, bound: (T, T)) -> Self {
+      if bound.0 < bound.1 {
+         self.bound = bound;
       }
       self
    }
@@ -158,15 +164,14 @@ where
    fn layout(&self, renderer: &Renderer, limits: &Limits) -> Node {
       let padding = f32::from(self.padding);
       let limits = limits.width(self.width()).height(Length::Shrink).pad(padding);
-      let content = self.content.layout(renderer, &limits);
+      let content = self.content.layout(renderer, &limits.loose());
       let txt_size = self.size.unwrap_or(renderer.default_size());
       let icon_size = txt_size*3/4;
-      let inc = Container::<(), Renderer>::new(Text::new(" ▲ ").size(icon_size)).center_y().center_x();
-      let dec = Container::<(), Renderer>::new(Text::new(" ▼ ").size(icon_size)).center_y().center_x();
+      let btn_mod = |c| Container::<(), Renderer>::new(Text::new(format!(" {} ", c)).size(icon_size)).center_y().center_x();
       let mut modifier = if self.padding < Renderer::DEFAULT_PADDING {
-         Row::<(), Renderer>::new().spacing(1).width(Length::Shrink).push(inc).push(dec).layout(renderer, &limits.loose())
+         Row::<(), Renderer>::new().spacing(1).width(Length::Shrink).push(btn_mod('+')).push(btn_mod('-')).layout(renderer, &limits.loose())
       } else {
-         Column::<(), Renderer>::new().spacing(1).width(Length::Shrink).push(inc).push(dec).layout(renderer, &limits.loose())
+         Column::<(), Renderer>::new().spacing(1).width(Length::Shrink).push(btn_mod('▲')).push(btn_mod('▼')).layout(renderer, &limits.loose())
       };
       let intrinsic = Size::new(
          content.size().width - 3.0,
@@ -177,8 +182,8 @@ where
       Node::with_children(size, vec![content, modifier])
    }
 
-   fn draw(&self, renderer: &mut Renderer, _defaults: &Renderer::Defaults, layout: Layout<'_>, cursor_position: Point, 
-      _viewport: &Rectangle) -> Renderer::Output 
+   fn draw(&self, renderer: &mut Renderer, _defaults: &Renderer::Defaults, layout: Layout<'_>, 
+      cursor_position: Point, _viewport: &Rectangle) -> Renderer::Output 
    {
       let bounds = layout.bounds();
       let mut children = layout.children();
@@ -250,7 +255,11 @@ where
                Event::Keyboard(keyboard::Event::CharacterReceived(c)) 
                   if self.content.state().is_focused() && c.is_numeric() => {
                      let mut new_val = self.value.to_string();
-                     new_val.push(c);
+                     match self.content.state().cursor().state(&Value::new(&new_val)) {
+                        cursor::State::Index(idx) => new_val.insert(idx, c),
+                        cursor::State::Selection{start, end} => new_val.replace_range(start..end, &c.to_string()),
+                     }
+                     
                      match T::from_str(&new_val) {
                         Ok(val) => {
                            if (self.bound.0..=self.bound.1).contains(&val) {
@@ -265,7 +274,6 @@ where
                Event::Keyboard(keyboard::Event::KeyPressed {
                   key_code, ..
                }) if self.content.state().is_focused() => {
-
                   match key_code {
                      keyboard::KeyCode::Up => {
                         self.increase_val(messages);

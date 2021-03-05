@@ -4,7 +4,7 @@ use cw::styles::custom_styles::CustomTextInput;
 use cw::utils::Theme;
 use app::{App, AppMessage};
 use iced::{
-   button, executor, scrollable, text_input, window, Align, Application, Column, Command,
+   executor, scrollable, text_input, window, Align, Application, Column, Command,
    Container, Element, Length, Row, Scrollable, Settings, TextInput,
 };
 use iced_custom_widget as cw;
@@ -43,141 +43,33 @@ impl Application for Menu {
 
    fn new(_flags: ()) -> (Self, Command<Self::Message>) {
       let applications = vec![
-         App {
-            icon: '\u{f834}',
-            name: "Airbnb".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f36f}',
-            name: "App Store".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f375}',
-            name: "AWS".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f268}',
-            name: "Google Chrom".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f1cb}',
-            name: "CodePen".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f391}',
-            name: "Digital Ocean".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f392}',
-            name: "Discord".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f395}',
-            name: "Docker".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f09a}',
-            name: "Facebook".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f39f}',
-            name: "Messenger".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f269}',
-            name: "Firefox".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f09b}',
-            name: "Github".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f3aa}',
-            name: "Google Drive".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f3ab}',
-            name: "Play Store".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f16d}',
-            name: "Instagram".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f3b5}',
-            name: "Music".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f08c}',
-            name: "Linkedin".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f267}',
-            name: "Safari".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f2c6}',
-            name: "Telegram".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f16c}',
-            name: "StackOverflow".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f181}',
-            name: "Trello".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f099}',
-            name: "Twitter".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f402}',
-            name: "Uber".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f403}',
-            name: "UIKit".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f189}',
-            name: "VK".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f232}',
-            name: "Whatsapp".to_string(),
-            clickable: button::State::new(),
-         },
-         App {
-            icon: '\u{f19e}',
-            name: "Yahoo".to_string(),
-            clickable: button::State::new(),
-         },
+         App::new('\u{f834}', "Airbnb".to_string()),
+         App::new('\u{f36f}', "App Store".to_string()),
+         App::new('\u{f375}', "AWS".to_string()),
+         App::new('\u{f268}', "Google Chrom".to_string()),
+         App::new('\u{f1cb}', "CodePen".to_string()),
+         App::new('\u{f391}', "Digital Ocean".to_string()),
+         App::new('\u{f392}', "Discord".to_string()),
+         App::new('\u{f395}', "Docker".to_string()),
+         App::new('\u{f09a}', "Facebook".to_string()),
+         App::new('\u{f39f}', "Messenger".to_string()),
+         App::new('\u{f269}', "Firefox".to_string()),
+         App::new('\u{f09b}', "Github".to_string()),
+         App::new('\u{f3aa}', "Google Drive".to_string()),
+         App::new('\u{f3ab}', "Play Store".to_string()),
+         App::new('\u{f16d}', "Instagram".to_string()),
+         App::new('\u{f3b5}', "Music".to_string()),
+         App::new('\u{f08c}', "Linkedin".to_string()),
+         App::new('\u{f267}', "Safari".to_string()),
+         App::new('\u{f2c6}', "Telegram".to_string()),
+         App::new('\u{f16c}', "StackOverflow".to_string()),
+         App::new('\u{f181}', "Trello".to_string()),
+         App::new('\u{f099}', "Twitter".to_string()),
+         App::new('\u{f402}', "Uber".to_string()),
+         App::new('\u{f403}', "UIKit".to_string()),
+         App::new('\u{f189}', "VK".to_string()),
+         App::new('\u{f232}', "Whatsapp".to_string()),
+         App::new('\u{f19e}', "Yahoo".to_string()),
       ];
       (
          Self {
