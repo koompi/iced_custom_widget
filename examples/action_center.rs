@@ -7,8 +7,8 @@ use iced_custom_widget as icw;
 use iced_native::window::Event;
 use iced_native::Event::Window;
 use icw::Icon;
-use styles::{ButtonStyle, ContainerStyle, SliderStyle};
 use std::ops::Index;
+use styles::{ButtonStyle, ContainerStyle, SliderStyle};
 
 use std::collections::HashMap;
 #[derive(Default, Debug, Clone)]
@@ -500,6 +500,9 @@ impl<'a> Application for ControlCenter<'a> {
         .height(Length::Fill)
         .into()
     }
+    fn background_color(&self) -> Color {
+        Color::from_rgba8(255, 255, 255, 0.1)
+    }
 }
 
 // helper functions
@@ -535,10 +538,10 @@ fn init() -> iced::Result {
     ControlCenter::run(Settings {
         window: window::Settings {
             size: (400, 400),
-            min_size: Some((300, 800)),
+            min_size: Some((300, 1050)),
             max_size: Some((600, 1080)),
             resizable: true,
-            decorations: true,
+            decorations: false,
             always_on_top: true,
             ..Default::default()
         },
@@ -554,116 +557,116 @@ fn main() {
 }
 
 mod styles {
-use iced::{button, container, progress_bar, Color, Background, Vector};
-pub enum ButtonStyle {
-    Default,
-    Circular(u8, u8, u8, f32),
-    BigCircular(u8, u8, u8, f32),
-    CircleRadius(u8, u8, u8, f32, f32, Color),
-    Transparent,
- }
- 
- impl button::StyleSheet for ButtonStyle {
-    fn active(&self) -> button::Style {
-       button::Style {
-            shadow_offset: Vector::new(0.0, 0.0),
-            background: match self {
-                ButtonStyle::Default => Some(Background::Color([0.87, 0.87, 0.87].into())),
-                ButtonStyle::Circular(c1, c2, c3, p)
-                | ButtonStyle::CircleRadius(c1, c2, c3, p, _, _)
-                | ButtonStyle::BigCircular(c1, c2, c3, p) => {
-                    Some(Background::Color(Color::from_rgba8(*c1, *c2, *c3, *p)))
-                }
-                ButtonStyle::Transparent => Some(Background::Color(Color::TRANSPARENT)),
-            },
-            border_radius: match self {
-                ButtonStyle::Default | ButtonStyle::Circular(_, _, _, _) => 4.0,
-                ButtonStyle::BigCircular(_, _, _, _) => 25.0,
-                ButtonStyle::Transparent => 0.0,
-                ButtonStyle::CircleRadius(_, _, _, _, r, _) => *r,
-            },
-            border_width: 0.0,
-            border_color: [0.7, 0.7, 0.7].into(),
-            text_color: match self {
-                ButtonStyle::Default
-                | ButtonStyle::BigCircular(_, _, _, _)
-                | ButtonStyle::Circular(_, _, _, _) => Color::WHITE,
-                ButtonStyle::Transparent => Color::BLACK,
-                ButtonStyle::CircleRadius(_, _, _, _, _, color) => *color,
-            },
-        }
+    use iced::{button, container, progress_bar, Background, Color, Vector};
+    pub enum ButtonStyle {
+        Default,
+        Circular(u8, u8, u8, f32),
+        BigCircular(u8, u8, u8, f32),
+        CircleRadius(u8, u8, u8, f32, f32, Color),
+        Transparent,
     }
- }
- 
- pub enum ContainerStyle {
-    Custom,
-    InkColor,
-    LightGray,
-    White,
-    LightGrayCircle,
-    Black,
- }
- impl container::StyleSheet for ContainerStyle {
-    fn style(&self) -> container::Style {
-       container::Style {
-            text_color: None,
-            background: match self {
-                ContainerStyle::Custom => {
-                    Some(Background::Color(Color::from_rgba8(223, 228, 234, 1.0)))
-                }
-                ContainerStyle::InkColor => {
-                    Some(Background::from(Color::from_rgba8(206, 214, 224, 1.0)))
-                }
-                ContainerStyle::LightGray => {
-                    Some(Background::from(Color::from_rgba8(215, 219, 221, 1.0)))
-                }
-                ContainerStyle::White => {
-                    Some(Background::from(Color::from_rgba8(255, 255, 255, 1.0)))
-                }
-                ContainerStyle::LightGrayCircle => {
-                    Some(Background::from(Color::from_rgba8(215, 219, 221, 0.5)))
-                }
-                ContainerStyle::Black => Some(Background::from(Color::BLACK)),
-            },
-            border_radius: match self {
-                ContainerStyle::Custom
-                | ContainerStyle::LightGrayCircle
-                | ContainerStyle::White
-                | ContainerStyle::InkColor
-                | ContainerStyle::Black => 10.0,
-                ContainerStyle::LightGray => 0.0,
-            },
-            border_width: 0.0,
-            border_color: Color::from_rgba8(255, 255, 255, 1.0),
-        }
-    }
- }
- pub enum SliderStyle {
-    Default,
-    Circle(u8, u8, u8, f32, f32),
-    BigCircle(u8, u8, u8, f32, f32),
-    WhiteGrayCircle(u8, u8, u8, f32, f32),
-}
 
-impl progress_bar::StyleSheet for SliderStyle {
-    fn style(&self) -> progress_bar::Style {
-        progress_bar::Style {
-            background: Background::Color(Color::from_rgb(0.6, 0.6, 0.6)),
-            bar: match self {
-                SliderStyle::WhiteGrayCircle(r, b, g, alpha, _)
-                | SliderStyle::Circle(r, b, g, alpha, _)
-                | SliderStyle::BigCircle(r, b, g, alpha, _) => {
-                    Background::Color(Color::from_rgba8(*r, *b, *g, *alpha))
-                }
-                SliderStyle::Default => Background::Color(Color::from_rgb(0.3, 0.9, 0.3)),
-            },
-            border_radius: match self {
-                SliderStyle::WhiteGrayCircle(_, _, _, _, r)
-                | SliderStyle::BigCircle(_, _, _, _, r)
-                | SliderStyle::Circle(_, _, _, _, r) => *r,
-                SliderStyle::Default => 5.0,
-            },
+    impl button::StyleSheet for ButtonStyle {
+        fn active(&self) -> button::Style {
+            button::Style {
+                shadow_offset: Vector::new(0.0, 0.0),
+                background: match self {
+                    ButtonStyle::Default => Some(Background::Color([0.87, 0.87, 0.87].into())),
+                    ButtonStyle::Circular(c1, c2, c3, p)
+                    | ButtonStyle::CircleRadius(c1, c2, c3, p, _, _)
+                    | ButtonStyle::BigCircular(c1, c2, c3, p) => {
+                        Some(Background::Color(Color::from_rgba8(*c1, *c2, *c3, *p)))
+                    }
+                    ButtonStyle::Transparent => Some(Background::Color(Color::TRANSPARENT)),
+                },
+                border_radius: match self {
+                    ButtonStyle::Default | ButtonStyle::Circular(_, _, _, _) => 4.0,
+                    ButtonStyle::BigCircular(_, _, _, _) => 25.0,
+                    ButtonStyle::Transparent => 0.0,
+                    ButtonStyle::CircleRadius(_, _, _, _, r, _) => *r,
+                },
+                border_width: 0.0,
+                border_color: [0.7, 0.7, 0.7].into(),
+                text_color: match self {
+                    ButtonStyle::Default
+                    | ButtonStyle::BigCircular(_, _, _, _)
+                    | ButtonStyle::Circular(_, _, _, _) => Color::WHITE,
+                    ButtonStyle::Transparent => Color::BLACK,
+                    ButtonStyle::CircleRadius(_, _, _, _, _, color) => *color,
+                },
+            }
         }
     }
-}
+
+    pub enum ContainerStyle {
+        Custom,
+        InkColor,
+        LightGray,
+        White,
+        LightGrayCircle,
+        Black,
+    }
+    impl container::StyleSheet for ContainerStyle {
+        fn style(&self) -> container::Style {
+            container::Style {
+                text_color: None,
+                background: match self {
+                    ContainerStyle::Custom => {
+                        Some(Background::Color(Color::from_rgba8(223, 228, 234, 1.0)))
+                    }
+                    ContainerStyle::InkColor => {
+                        Some(Background::from(Color::from_rgba8(206, 214, 224, 1.0)))
+                    }
+                    ContainerStyle::LightGray => {
+                        Some(Background::from(Color::from_rgba8(215, 219, 221, 1.0)))
+                    }
+                    ContainerStyle::White => {
+                        Some(Background::from(Color::from_rgba8(255, 255, 255, 1.0)))
+                    }
+                    ContainerStyle::LightGrayCircle => {
+                        Some(Background::from(Color::from_rgba8(215, 219, 221, 0.5)))
+                    }
+                    ContainerStyle::Black => Some(Background::from(Color::BLACK)),
+                },
+                border_radius: match self {
+                    ContainerStyle::Custom
+                    | ContainerStyle::LightGrayCircle
+                    | ContainerStyle::White
+                    | ContainerStyle::InkColor
+                    | ContainerStyle::Black => 10.0,
+                    ContainerStyle::LightGray => 0.0,
+                },
+                border_width: 0.0,
+                border_color: Color::from_rgba8(255, 255, 255, 1.0),
+            }
+        }
+    }
+    pub enum SliderStyle {
+        Default,
+        Circle(u8, u8, u8, f32, f32),
+        BigCircle(u8, u8, u8, f32, f32),
+        WhiteGrayCircle(u8, u8, u8, f32, f32),
+    }
+
+    impl progress_bar::StyleSheet for SliderStyle {
+        fn style(&self) -> progress_bar::Style {
+            progress_bar::Style {
+                background: Background::Color(Color::from_rgb(0.6, 0.6, 0.6)),
+                bar: match self {
+                    SliderStyle::WhiteGrayCircle(r, b, g, alpha, _)
+                    | SliderStyle::Circle(r, b, g, alpha, _)
+                    | SliderStyle::BigCircle(r, b, g, alpha, _) => {
+                        Background::Color(Color::from_rgba8(*r, *b, *g, *alpha))
+                    }
+                    SliderStyle::Default => Background::Color(Color::from_rgb(0.3, 0.9, 0.3)),
+                },
+                border_radius: match self {
+                    SliderStyle::WhiteGrayCircle(_, _, _, _, r)
+                    | SliderStyle::BigCircle(_, _, _, _, r)
+                    | SliderStyle::Circle(_, _, _, _, r) => *r,
+                    SliderStyle::Default => 5.0,
+                },
+            }
+        }
+    }
 }

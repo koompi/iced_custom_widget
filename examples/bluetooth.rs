@@ -7,9 +7,7 @@ use iced_custom_widget as icw;
 use iced_native::window::Event;
 use iced_native::Event::Window;
 use icw::components::{Icon, Toggler};
-use styles::{
-    ButtonStyle, ContainerStyle, RuleStyle, InputStyle,
-};
+use styles::{ButtonStyle, ContainerStyle, InputStyle, RuleStyle};
 #[derive(Default, Debug, Clone)]
 pub struct KBleutooth {
     is_enable: bool,
@@ -28,6 +26,7 @@ pub struct KBleutooth {
     vector_bluetooths: Vec<(BluetoothDevType, String, BluetoothStatus)>,
     scroll_area: scrollable::State,
 }
+
 #[derive(Debug, Clone)]
 pub enum BluetoothStatus {
     Connected,
@@ -483,18 +482,18 @@ fn main() {
 }
 
 mod styles {
-    use iced::{button, container, progress_bar, rule, text_input, Color, Background, Vector};
+    use iced::{button, container, progress_bar, rule, text_input, Background, Color, Vector};
     pub enum ButtonStyle {
         Default,
         Circular(u8, u8, u8, f32),
         BigCircular(u8, u8, u8, f32),
         CircleRadius(u8, u8, u8, f32, f32, Color),
         Transparent,
-     }
-     
-     impl button::StyleSheet for ButtonStyle {
+    }
+
+    impl button::StyleSheet for ButtonStyle {
         fn active(&self) -> button::Style {
-           button::Style {
+            button::Style {
                 shadow_offset: Vector::new(0.0, 0.0),
                 background: match self {
                     ButtonStyle::Default => Some(Background::Color([0.87, 0.87, 0.87].into())),
@@ -522,19 +521,19 @@ mod styles {
                 },
             }
         }
-     }
-     
-     pub enum ContainerStyle {
+    }
+
+    pub enum ContainerStyle {
         Custom,
         InkColor,
         LightGray,
         White,
         LightGrayCircle,
         Black,
-     }
-     impl container::StyleSheet for ContainerStyle {
+    }
+    impl container::StyleSheet for ContainerStyle {
         fn style(&self) -> container::Style {
-           container::Style {
+            container::Style {
                 text_color: None,
                 background: match self {
                     ContainerStyle::Custom => {
@@ -566,14 +565,13 @@ mod styles {
                 border_color: Color::from_rgba8(255, 255, 255, 1.0),
             }
         }
-     }
-     pub enum SliderStyle {
+    }
+    pub enum SliderStyle {
         Default,
         Circle(u8, u8, u8, f32, f32),
         BigCircle(u8, u8, u8, f32, f32),
         WhiteGrayCircle(u8, u8, u8, f32, f32),
     }
-    
     impl progress_bar::StyleSheet for SliderStyle {
         fn style(&self) -> progress_bar::Style {
             progress_bar::Style {
@@ -614,7 +612,6 @@ mod styles {
         CircularBorder,
         InkBorder,
     }
-    
     impl text_input::StyleSheet for InputStyle {
         fn active(&self) -> text_input::Style {
             text_input::Style {
@@ -624,7 +621,6 @@ mod styles {
                 border_color: Color::from_rgb(0.7, 0.7, 0.7),
             }
         }
-    
         fn focused(&self) -> text_input::Style {
             text_input::Style {
                 border_color: Color::from_rgb(0.5, 0.5, 0.5),
@@ -636,17 +632,14 @@ mod styles {
                 ..self.active()
             }
         }
-    
         fn placeholder_color(&self) -> Color {
             Color::from_rgb(0.7, 0.7, 0.7)
         }
-    
         fn value_color(&self) -> Color {
             Color::from_rgba8(86, 101, 115, 1.0)
         }
-    
         fn selection_color(&self) -> Color {
             Color::from_rgba(1.0, 1.0, 1.0, 1.0)
         }
-    }    
+    }
 }
