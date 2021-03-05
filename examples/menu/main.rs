@@ -5,7 +5,7 @@ use cw::utils::Theme;
 use app::{App, AppMessage};
 use iced::{
    executor, scrollable, text_input, window, Align, Application, Column, Command,
-   Container, Element, Length, Row, Scrollable, Settings, TextInput,
+   Container, Element, Length, Row, Scrollable, Settings, TextInput, Color
 };
 use iced_custom_widget as cw;
 pub struct Menu {
@@ -22,6 +22,7 @@ impl Menu {
          default_text_size: 13,
          window: window::Settings {
             always_on_top: true,
+            transparent: true,
             ..window::Settings::default()
          },
          ..Settings::default()
@@ -178,9 +179,9 @@ impl Application for Menu {
       window::Mode::Fullscreen
    }
 
-   // fn background_color(&self) -> Color {
-   //    Color::from_rgba8(255, 255, 255, 0.3)
-   // }
+   fn background_color(&self) -> Color {
+      Color::from_rgba8(255, 255, 255, 0.3)
+   }
 
    // fn scale_factor(&self) -> f64 {
    //    self.scale_state.scale as f64
