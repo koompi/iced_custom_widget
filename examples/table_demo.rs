@@ -5,6 +5,7 @@ use icw::table_columns;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
 #[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Task {
     pub id: String,
@@ -42,7 +43,7 @@ impl TableData for Task {
 
 fn create_mock_tasks() -> Vec<Task> {
     let mut rng = rand::thread_rng();
-    (0..50)
+    (0..27)
         .map(|i| Task {
             id: format!("task-{}", i + 1),
             description: String::from("These are not the Lorem Ipsums you are looking for"),
@@ -61,13 +62,12 @@ pub struct TableDemo {
     table_state: table::State,
 }
 
-impl TableDemo {
-    pub fn init() -> iced::Result {
-        TableDemo::run(Settings {
-            default_text_size: 13,
-            ..Settings::default()
-        })
-    }
+
+fn main() -> iced::Result {
+    TableDemo::run(Settings {
+        default_text_size: 13,
+        ..Settings::default()
+    })
 }
 
 impl Sandbox for TableDemo {
@@ -116,8 +116,4 @@ impl Sandbox for TableDemo {
             //  .style(CustomScrollable::Default(Theme::light().palette))
             .into()
     }
-}
-
-fn main() {
-    println!("table demo running.")
 }

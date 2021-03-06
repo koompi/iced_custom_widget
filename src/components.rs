@@ -11,8 +11,8 @@ pub mod number_input;
 
 pub use card::Card;
 pub use grid::Grid;
-pub use icon::Icon;
-pub use icon_brand::IconBrand;
+pub use icon::{Icons, Icon};
+pub use icon_brand::{IconBrands, IconBrand};
 pub use stack::{Overflow, Stack};
 pub use stepper::Stepper;
 pub use tab::Tab;

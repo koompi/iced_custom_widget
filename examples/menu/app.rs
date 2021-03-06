@@ -1,12 +1,12 @@
 use iced_custom_widget as cw;
-use cw::components::icon_brand::IconBrand;
+use cw::components::{IconBrand, IconBrands};
 use cw::utils::Theme;
 use cw::styles::custom_styles::CustomButton;
 use iced::{button, Align, Button, Column, Container, Element, Text};
 
 #[derive(Debug, Clone)]
 pub struct App {
-   pub icon: char,
+   pub icon: IconBrands,
    pub name: String,
    pub clickable: button::State,
 }
@@ -17,7 +17,7 @@ pub enum AppMessage {
 }
 
 impl App {
-   pub fn new(icon: char, name: String) -> Self {
+   pub fn new(icon: IconBrands, name: String) -> Self {
       Self {
          icon,
          name,
